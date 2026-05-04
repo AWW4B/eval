@@ -2,38 +2,64 @@
 
 This repository contains the automated evaluation suite for the Daraz AI Shopping Assistant.
 
-## 📺 Demo Video
-[Watch the Evaluation Demo (Loom)](https://vimeo.com/placeholder)  
-*(Replace with your recorded video link)*
+## Demo Video
+[Watch the Evaluation Demo (Drive)](https://drive.google.com/file/d/1t_P_NaEnnSjNfQsGQMz7eXefqdP4YjAY/view?usp=sharing)
 
-## 🚀 How to Run
-1. **Start the Chatbot Backend**:
-   ```bash
-   cd backend/src
-   uvicorn main:app --port 8000
+*(Couldn't upload on YouTube due to the video length, so the Drive link is the submission copy.)*
+
+## Deliverables
+- `report.md`: formal evaluation report with tables, analysis, and plots.
+- `eval_results.json`: machine-readable results produced by the evaluation suite.
+- `plots/`: charts generated from the saved results snapshot.
+
+## Setup
+1. Make sure Docker is running. The evaluator launches `judge_worker.py` inside the backend container, so Docker Desktop/Engine must be available.
+2. Install the Python packages used by the harness:
+   ```powershell
+   python -m pip install aiohttp websockets psutil matplotlib
    ```
-2. **Execute Evaluations**:
-   ```bash
-   cd evalsetc
-   pip install -r requirements.txt
-   python run_evals.py
+3. Start the backend API:
+   ```powershell
+   uvicorn main:app --host 0.0.0.0 --port 8000
    ```
-3. **View Results**:
-   The suite will generate `eval_report.md` (raw) and you can find the formal analysis in `report.md`.
 
-## 📊 Metrics Definitions
-- **TTFT (Time to First Token)**: Measured from the moment the JSON is sent over WebSocket until the first token message is received.
-- **RAG Precision**: Calculated as the percentage of queries where the retrieved context contains keywords from the annotated ground truth.
-- **Faithfulness**: A heuristic check verifying that the LLM response contains specific factual markers from the retrieved document.
-- **95% Confidence Interval**: Calculated using the standard deviation of 30 trials: `1.96 * (std_dev / sqrt(n))`.
+## Run the Evaluation Suite
+From the repository root:
 
-## 📂 Folder Structure
-- `/data.py`: Annotated ground truth for 30+ RAG queries and 10+ dialogues.
-- `/run_evals.py`: The single-command test harness.
-- `/report.md`: Formal analysis and performance curves.
+```powershell
+python run_evals.py
+```
 
-## 🛠 Dependencies
-- `aiohttp`: Async HTTP requests.
-- `websockets`: Real-time token latency measurement.
-- `psutil`: Hardware configuration detection.
-- `numpy`: Statistical calculations.
+When the run completes, open the live dashboard at `http://localhost:8765/`.
+
+## Metrics
+The suite computes the following metrics:
+
+- **RAG Precision** = `rag_passed / rag_total`
+- **Tool Accuracy** = `tool_passed / tool_total`
+- **TTFT** (Time to First Token) = time from sending the websocket prompt to receiving the first token
+- **ITL** (Inter-Token Latency) = `(E2E - TTFT) / max(1, token_count - 1)`
+- **E2E Latency** = total time from sending the prompt until the `done` event
+- **95% CI** = `1.96 * std_dev / sqrt(n)` for the latency samples in each scenario
+- **Throughput** = completed turns per second during the fixed concurrency sweep
+
+`DockerJudge` runs `judge_worker.py` inside the backend container with a neutral system prompt and compares the actual answer against the expected answer for RAG and tool cases.
+
+## How to Interpret Results
+- **RAG Precision**: above 75% is strong for this domain; 50-75% is usable but still noisy; below 50% needs retrieval or prompt work.
+- **Tool Accuracy**: above 90% is strong; below 70% usually means tool routing or instrumentation is missing.
+- **Latency**: lower is better. For an interactive assistant, TTFT under 5s is good, 5-10s is acceptable, and above 10s is slow.
+- **Throughput**: higher is better, but it should be interpreted with latency because fast throughput with slow first-token time is still poor UX.
+
+## Assumptions and Limitations
+- The saved report reflects one evaluation snapshot, not a repeated benchmark campaign.
+- RAG scoring uses a heuristic overlap check plus an LLM-judge fallback, so semantically correct paraphrases can still be marked false.
+- Tool accuracy depends on the backend emitting the correct tool markers over the websocket stream.
+- The latency numbers were measured on the available local hardware and include model inference overhead.
+- The current plots are derived from the saved `eval_results.json` snapshot; a concurrency-vs-latency curve would require a separate sweep across multiple concurrency levels.
+
+## Project Files
+- `data.py`: annotated ground truth for RAG, tool, and latency scenarios.
+- `run_evals.py`: evaluation harness and dashboard server.
+- `report.md`: formal report for submission.
+- `plots/`: generated charts referenced by the report.

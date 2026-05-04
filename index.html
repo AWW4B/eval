@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Daraz AI — Eval Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --accent: #f97316; --accent2: #3b82f6; --green: #22c55e;
+    --red: #ef4444; --text: #e6edf3; --muted: #8b949e;
+    --card-r: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+  a { color: var(--accent); }
+
+  /* Layout */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 40px; display: flex; align-items: center; gap: 16px; }
+  header .logo { font-size: 22px; font-weight: 700; }
+  header .logo span { color: var(--accent); }
+  header .badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: .5px; }
+  header .ts { margin-left: auto; color: var(--muted); font-size: 13px; }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 36px 24px; }
+
+  /* Loading */
+  #loading { text-align: center; padding: 80px; color: var(--muted); font-size: 18px; }
+  #loading .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Cards */
+  .grid { display: grid; gap: 20px; }
+  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 24px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .stat-val { font-size: 36px; font-weight: 700; }
+  .stat-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .good { color: var(--green); }
+  .bad  { color: var(--red); }
+  .ok   { color: var(--accent); }
+  section { margin-top: 36px; }
+  section h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  section h2::before { content: ''; display: block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+
+  /* Tables */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr:hover td { background: rgba(255,255,255,.03); }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .pill-pass { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill-fail { background: rgba(239,68,68,.15);  color: var(--red); }
+
+  /* Chart containers */
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* System info */
+  .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .sys-item { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .sys-item .key { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+  .sys-item .val { font-size: 14px; font-weight: 600; }
+
+  .err-box { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); border-radius: 10px; padding: 24px; color: var(--red); text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Daraz <span>AI</span></div>
+  <div class="badge">EVAL DASHBOARD</div>
+  <div class="ts" id="ts"></div>
+</header>
+
+<main>
+  <div id="loading">
+    <div class="spinner"></div>
+    Loading eval_results.json…
+  </div>
+  <div id="app" style="display:none"></div>
+</main>
+
+<script>
+async function load() {
+  try {
+    const res = await fetch('eval_results.json?' + Date.now());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    render(d);
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div class="err-box">⚠️ Could not load <code>eval_results.json</code>.<br><br>
+       Run <code>python run_evals.py</code> first, then serve this folder:<br>
+       <code>python -m http.server 8080</code> and open <a href="http://localhost:8080">http://localhost:8080</a><br><br>
+       <small>${e.message}</small></div>`;
+  }
+}
+
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+function ms(v)  { return v ? v.toFixed(0) + ' ms' : '—'; }
+function colorClass(v) { return v >= 0.75 ? 'good' : v >= 0.5 ? 'ok' : 'bad'; }
+
+function render(d) {
+  document.getElementById('loading').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'block';
+  document.getElementById('ts').textContent = 'Generated: ' + d.generated_at;
+
+  const cor  = d.correctness || {};
+  const perf = d.performance  || {};
+  const sys  = d.system       || {};
+  const raw  = d.raw          || {};
+  const scen = perf.scenarios  || {};
+
+  // ── KPI cards ────────────────────────────────────────────────────
+  const ragP = cor.rag_precision  ?? 0;
+  const tolP = cor.tool_accuracy  ?? 0;
+  const thr  = perf.throughput    ?? 0;
+  const latencies = Object.values(scen).map(s => s.mean).filter(Boolean);
+  const avgLat = latencies.length ? latencies.reduce((a,b)=>a+b,0)/latencies.length : 0;
+
+  app.innerHTML = `
+  <div class="grid grid-4">
+    <div class="card">
+      <div class="card-title">RAG Precision@1</div>
+      <div class="stat-val ${colorClass(ragP)}">${pct(ragP)}</div>
+      <div class="stat-sub">${cor.rag_passed??0} / ${cor.rag_total??0} correct</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tool Accuracy</div>
+      <div class="stat-val ${colorClass(tolP)}">${pct(tolP)}</div>
+      <div class="stat-sub">${cor.tool_passed??0} / ${cor.tool_total??0} correct</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Avg Latency (E2E)</div>
+      <div class="stat-val ok">${ms(avgLat)}</div>
+      <div class="stat-sub">across ${Object.keys(scen).length} scenarios</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Throughput</div>
+      <div class="stat-val good">${thr.toFixed(2)}</div>
+      <div class="stat-sub">turns / second (5 users)</div>
+    </div>
+  </div>
+
+  <!-- System -->
+  <section>
+    <h2>System Configuration</h2>
+    <div class="sys-grid">
+      <div class="sys-item"><div class="key">OS</div><div class="val">${sys.os??'—'}</div></div>
+      <div class="sys-item"><div class="key">CPU</div><div class="val" style="font-size:12px">${sys.processor??'—'}</div></div>
+      <div class="sys-item"><div class="key">RAM</div><div class="val">${sys.ram??'—'}</div></div>
+      <div class="sys-item"><div class="key">Python</div><div class="val">${sys.python_version??'—'}</div></div>
+      <div class="sys-item"><div class="key">Judge</div><div class="val">LLM (Qwen 2.5-3B)</div></div>
+    </div>
+  </section>
+
+  <!-- Latency Charts -->
+  <section>
+    <h2>Latency Breakdown</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-title">Mean E2E Latency by Scenario (ms)</div>
+        <div class="chart-wrap"><canvas id="chartE2E"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Avg TTFT (Time to First Token) by Scenario (ms)</div>
+        <div class="chart-wrap"><canvas id="chartTTFT"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latency Table -->
+  <section>
+    <h2>Latency Details</h2>
+    <div class="card tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Scenario</th><th>Mean E2E (ms)</th><th>Median (ms)</th>
+          <th>P90 (ms)</th><th>95% CI</th><th>Avg TTFT (ms)</th>
+        </tr></thead>
+        <tbody id="latTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- RAG Results -->
+  <section>
+    <h2>RAG Correctness — Per Query</h2>
+    <div class="card tbl-wrap">
+      <table>
+        <thead><tr><th>Question</th><th>Expected</th><th>Actual Response</th><th>Judge</th></tr></thead>
+        <tbody id="ragTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tool Results -->
+  <section>
+    <h2>Tool Invocation — Per Case</h2>
+    <div class="card tbl-wrap">
+      <table>
+        <thead><tr><th>Prompt</th><th>Expected Tool</th><th>Actual Response</th><th>Judge</th></tr></thead>
+        <tbody id="toolTbody"></tbody>
+      </table>
+    </div>
+  </section>
+  `;
+
+  // Fill latency table
+  const latTbody = document.getElementById('latTbody');
+  for (const [name, m] of Object.entries(scen)) {
+    latTbody.innerHTML += `<tr>
+      <td><strong>${name}</strong></td>
+      <td>${ms(m.mean)}</td><td>${ms(m.median)}</td>
+      <td>${ms(m.p90)}</td><td>±${ms(m.ci_95)}</td><td>${ms(m.ttft_avg)}</td>
+    </tr>`;
+  }
+
+  // Fill RAG table
+  const ragTbody = document.getElementById('ragTbody');
+  for (const r of (raw.rag || [])) {
+    ragTbody.innerHTML += `<tr>
+      <td title="${r.question}">${r.question}</td>
+      <td title="${r.expected}">${r.expected}</td>
+      <td title="${r.actual}">${r.actual}</td>
+      <td><span class="pill ${r.passed?'pill-pass':'pill-fail'}">${r.passed?'PASS':'FAIL'}</span></td>
+    </tr>`;
+  }
+
+  // Fill tool table
+  const toolTbody = document.getElementById('toolTbody');
+  for (const r of (raw.tools || [])) {
+    toolTbody.innerHTML += `<tr>
+      <td title="${r.prompt}">${r.prompt}</td>
+      <td>${r.expected_tool}</td>
+      <td title="${r.actual}">${r.actual}</td>
+      <td><span class="pill ${r.passed?'pill-pass':'pill-fail'}">${r.passed?'PASS':'FAIL'}</span></td>
+    </tr>`;
+  }
+
+  // Charts
+  const labels = Object.keys(scen);
+  const colors = ['#f97316','#3b82f6','#22c55e','#a855f7'];
+
+  new Chart(document.getElementById('chartE2E'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Mean E2E (ms)',
+        data: labels.map(k => scen[k]?.mean ?? 0),
+        backgroundColor: colors,
+        borderRadius: 6,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartTTFT'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Avg TTFT (ms)',
+        data: labels.map(k => scen[k]?.ttft_avg ?? 0),
+        backgroundColor: colors.map(c => c + 'cc'),
+        borderRadius: 6,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+      }
+    }
+  });
+}
+
+load();
+</script>
+</body>
+</html>

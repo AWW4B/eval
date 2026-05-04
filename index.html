@@ -1,292 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Daraz AI — Eval Dashboard</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Daraz AI — Live Eval Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0d1117; --surface: #161b22; --border: #30363d;
-    --accent: #f97316; --accent2: #3b82f6; --green: #22c55e;
-    --red: #ef4444; --text: #e6edf3; --muted: #8b949e;
-    --card-r: 12px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
-  a { color: var(--accent); }
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --accent:#f97316;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;
+  --yellow:#eab308;--text:#e6edf3;--muted:#8b949e;--r:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;
+  display:flex;align-items:center;gap:14px}
+.logo{font-size:20px;font-weight:700}.logo span{color:var(--accent)}
+.badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.6px}
+#conn-status{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+#conn-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+#conn-dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
+#conn-dot.done{background:var(--blue)}
+main{max-width:1300px;margin:0 auto;padding:28px 20px}
 
-  /* Layout */
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 40px; display: flex; align-items: center; gap: 16px; }
-  header .logo { font-size: 22px; font-weight: 700; }
-  header .logo span { color: var(--accent); }
-  header .badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: .5px; }
-  header .ts { margin-left: auto; color: var(--muted); font-size: 13px; }
+/* KPI bar */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:28px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.kpi-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.kpi-val{font-size:32px;font-weight:700;line-height:1}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.green{color:var(--green)}.red{color:var(--red)}.orange{color:var(--accent)}.blue{color:var(--blue)}
 
-  main { max-width: 1280px; margin: 0 auto; padding: 36px 24px; }
+/* Phase header */
+.phase-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.phase-title::before{content:'';display:block;width:3px;height:18px;background:var(--accent);border-radius:2px}
 
-  /* Loading */
-  #loading { text-align: center; padding: 80px; color: var(--muted); font-size: 18px; }
-  #loading .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Progress bar */
+.progress-wrap{background:var(--surface2);border-radius:4px;height:6px;margin-bottom:16px;overflow:hidden}
+.progress-bar{height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
 
-  /* Cards */
-  .grid { display: grid; gap: 20px; }
-  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 24px; }
-  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
-  .stat-val { font-size: 36px; font-weight: 700; }
-  .stat-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .good { color: var(--green); }
-  .bad  { color: var(--red); }
-  .ok   { color: var(--accent); }
-  section { margin-top: 36px; }
-  section h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-  section h2::before { content: ''; display: block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+/* Live log */
+.log-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px 16px;font-size:12px;font-family:'Fira Code',monospace;
+  max-height:260px;overflow-y:auto;margin-bottom:24px}
+.log-box .row{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:10px;align-items:baseline}
+.log-box .ts{color:var(--muted);flex-shrink:0}
+.log-box .pass{color:var(--green)}.log-box .fail{color:var(--red)}
+.log-box .info{color:var(--blue)}
 
-  /* Tables */
-  .tbl-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: var(--muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  tr:hover td { background: rgba(255,255,255,.03); }
-  .pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .pill-pass { background: rgba(34,197,94,.15); color: var(--green); }
-  .pill-fail { background: rgba(239,68,68,.15);  color: var(--red); }
+/* Tables */
+section{margin-bottom:28px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;max-width:300px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.025)}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.pass-pill{background:rgba(34,197,94,.15);color:var(--green)}
+.fail-pill{background:rgba(239,68,68,.15);color:var(--red)}
+.wait-pill{background:rgba(234,179,8,.12);color:var(--yellow)}
 
-  /* Chart containers */
-  .chart-wrap { position: relative; height: 260px; }
+/* Charts */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;margin-bottom:28px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.chart-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.chart-wrap{position:relative;height:220px}
 
-  /* System info */
-  .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-  .sys-item { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
-  .sys-item .key { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
-  .sys-item .val { font-size: 14px; font-weight: 600; }
-
-  .err-box { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); border-radius: 10px; padding: 24px; color: var(--red); text-align: center; }
+/* Waiting splash */
+#splash{text-align:center;padding:80px 20px;color:var(--muted)}
+.spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">Daraz <span>AI</span></div>
-  <div class="badge">EVAL DASHBOARD</div>
-  <div class="ts" id="ts"></div>
+  <div class="badge">LIVE EVAL</div>
+  <div id="conn-status"><div id="conn-dot"></div><span id="conn-label">Connecting…</span></div>
 </header>
-
 <main>
-  <div id="loading">
-    <div class="spinner"></div>
-    Loading eval_results.json…
-  </div>
-  <div id="app" style="display:none"></div>
-</main>
 
+<!-- Splash while not connected -->
+<div id="splash">
+  <div class="spinner"></div>
+  <p>Waiting for <code>run_evals.py</code>…<br><br>
+  Make sure it's running:<br><code>source /home/allain/dev-env/bin/activate &amp;&amp; python run_evals.py</code></p>
+</div>
+
+<!-- Main dashboard (hidden until first event) -->
+<div id="dashboard" style="display:none">
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">RAG Precision</div>
+      <div class="kpi-val orange" id="kpi-rag">—</div>
+      <div class="kpi-sub" id="kpi-rag-sub">0 / 0</div></div>
+    <div class="kpi"><div class="kpi-label">Tool Accuracy</div>
+      <div class="kpi-val orange" id="kpi-tool">—</div>
+      <div class="kpi-sub" id="kpi-tool-sub">0 / 0</div></div>
+    <div class="kpi"><div class="kpi-label">Avg E2E Latency</div>
+      <div class="kpi-val blue" id="kpi-lat">—</div>
+      <div class="kpi-sub">across scenarios</div></div>
+    <div class="kpi"><div class="kpi-label">Throughput</div>
+      <div class="kpi-val green" id="kpi-tps">—</div>
+      <div class="kpi-sub">turns / second</div></div>
+  </div>
+
+  <!-- Live log -->
+  <div class="phase-title">Live Activity Log</div>
+  <div class="log-box" id="log-box"></div>
+
+  <!-- RAG progress -->
+  <section>
+    <div class="phase-title">RAG Correctness — <span id="rag-prog-label">waiting…</span></div>
+    <div class="progress-wrap"><div class="progress-bar" id="rag-bar" style="width:0%"></div></div>
+    <div class="card tbl-wrap">
+      <table><thead><tr><th>#</th><th>Question</th><th>Expected</th><th>Response</th><th>Judge</th></tr></thead>
+      <tbody id="rag-tbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- Tool progress -->
+  <section>
+    <div class="phase-title">Tool Accuracy — <span id="tool-prog-label">waiting…</span></div>
+    <div class="progress-wrap"><div class="progress-bar" id="tool-bar" style="width:0%"></div></div>
+    <div class="card tbl-wrap">
+      <table><thead><tr><th>#</th><th>Prompt</th><th>Expected Tool</th><th>Response</th><th>Judge</th></tr></thead>
+      <tbody id="tool-tbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- Latency charts -->
+  <div class="grid2">
+    <div class="chart-card">
+      <div class="chart-label">Mean E2E Latency per Scenario (ms)</div>
+      <div class="chart-wrap"><canvas id="chart-e2e"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-label">Avg TTFT per Scenario (ms)</div>
+      <div class="chart-wrap"><canvas id="chart-ttft"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Latency table -->
+  <section>
+    <div class="phase-title">Latency Details</div>
+    <div class="card tbl-wrap">
+      <table><thead><tr>
+        <th>Scenario</th><th>Mean E2E (ms)</th><th>Median</th><th>P90</th><th>95% CI</th><th>Avg TTFT</th>
+      </tr></thead>
+      <tbody id="lat-tbody"></tbody></table>
+    </div>
+  </section>
+</div>
+
+</main>
 <script>
-async function load() {
-  try {
-    const res = await fetch('eval_results.json?' + Date.now());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const d = await res.json();
-    render(d);
-  } catch(e) {
-    document.getElementById('loading').innerHTML =
-      `<div class="err-box">⚠️ Could not load <code>eval_results.json</code>.<br><br>
-       Run <code>python run_evals.py</code> first, then serve this folder:<br>
-       <code>python -m http.server 8080</code> and open <a href="http://localhost:8080">http://localhost:8080</a><br><br>
-       <small>${e.message}</small></div>`;
+// ── State ──────────────────────────────────────────────────────────
+const S = {
+  rag:  {total:0, done:0, passed:0},
+  tool: {total:0, done:0, passed:0},
+  lat:  {},
+};
+
+// ── Helpers ────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const pct = v => v === null ? '—' : (v*100).toFixed(1)+'%';
+const ms  = v => v ? v.toFixed(0)+' ms' : '—';
+const ts  = () => new Date().toLocaleTimeString();
+const pal = ['#f97316','#3b82f6','#22c55e','#a855f7','#ec4899'];
+
+function log(msg, cls='') {
+  const box = $('log-box');
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `<span class="ts">${ts()}</span><span class="${cls}">${msg}</span>`;
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showDashboard() {
+  $('splash').style.display    = 'none';
+  $('dashboard').style.display = 'block';
+}
+
+function setConn(state) {
+  const dot = $('conn-dot');
+  const lbl = $('conn-label');
+  dot.className = state;
+  lbl.textContent = state === 'live' ? 'LIVE' : state === 'done' ? 'Complete' : 'Connecting…';
+}
+
+// ── Chart instances ────────────────────────────────────────────────
+let chartE2E = null, chartTTFT = null;
+const chartCfg = (label, data, labels) => ({
+  type:'bar',
+  data:{labels, datasets:[{label, data, backgroundColor:pal.slice(0,labels.length), borderRadius:6}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},
+      y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}
+    }}
+});
+
+function updateCharts() {
+  const labels = Object.keys(S.lat);
+  if (!labels.length) return;
+  const e2e  = labels.map(k => S.lat[k].mean  || 0);
+  const ttft = labels.map(k => S.lat[k].ttft_avg || 0);
+
+  if (chartE2E) {
+    chartE2E.data.labels = labels;
+    chartE2E.data.datasets[0].data = e2e;
+    chartE2E.data.datasets[0].backgroundColor = pal.slice(0, labels.length);
+    chartE2E.update();
+  } else {
+    chartE2E = new Chart($('chart-e2e'), chartCfg('Mean E2E (ms)', e2e, labels));
+  }
+  if (chartTTFT) {
+    chartTTFT.data.labels = labels;
+    chartTTFT.data.datasets[0].data = ttft;
+    chartTTFT.data.datasets[0].backgroundColor = pal.slice(0, labels.length).map(c=>c+'bb');
+    chartTTFT.update();
+  } else {
+    chartTTFT = new Chart($('chart-ttft'), chartCfg('Avg TTFT (ms)', ttft, labels));
+  }
+
+  // Update avg latency KPI
+  if (e2e.length) {
+    const avg = e2e.reduce((a,b)=>a+b,0)/e2e.length;
+    $('kpi-lat').textContent = ms(avg);
   }
 }
 
-function pct(v) { return (v * 100).toFixed(1) + '%'; }
-function ms(v)  { return v ? v.toFixed(0) + ' ms' : '—'; }
-function colorClass(v) { return v >= 0.75 ? 'good' : v >= 0.5 ? 'ok' : 'bad'; }
-
-function render(d) {
-  document.getElementById('loading').style.display = 'none';
-  const app = document.getElementById('app');
-  app.style.display = 'block';
-  document.getElementById('ts').textContent = 'Generated: ' + d.generated_at;
-
-  const cor  = d.correctness || {};
-  const perf = d.performance  || {};
-  const sys  = d.system       || {};
-  const raw  = d.raw          || {};
-  const scen = perf.scenarios  || {};
-
-  // ── KPI cards ────────────────────────────────────────────────────
-  const ragP = cor.rag_precision  ?? 0;
-  const tolP = cor.tool_accuracy  ?? 0;
-  const thr  = perf.throughput    ?? 0;
-  const latencies = Object.values(scen).map(s => s.mean).filter(Boolean);
-  const avgLat = latencies.length ? latencies.reduce((a,b)=>a+b,0)/latencies.length : 0;
-
-  app.innerHTML = `
-  <div class="grid grid-4">
-    <div class="card">
-      <div class="card-title">RAG Precision@1</div>
-      <div class="stat-val ${colorClass(ragP)}">${pct(ragP)}</div>
-      <div class="stat-sub">${cor.rag_passed??0} / ${cor.rag_total??0} correct</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Tool Accuracy</div>
-      <div class="stat-val ${colorClass(tolP)}">${pct(tolP)}</div>
-      <div class="stat-sub">${cor.tool_passed??0} / ${cor.tool_total??0} correct</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Avg Latency (E2E)</div>
-      <div class="stat-val ok">${ms(avgLat)}</div>
-      <div class="stat-sub">across ${Object.keys(scen).length} scenarios</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Throughput</div>
-      <div class="stat-val good">${thr.toFixed(2)}</div>
-      <div class="stat-sub">turns / second (5 users)</div>
-    </div>
-  </div>
-
-  <!-- System -->
-  <section>
-    <h2>System Configuration</h2>
-    <div class="sys-grid">
-      <div class="sys-item"><div class="key">OS</div><div class="val">${sys.os??'—'}</div></div>
-      <div class="sys-item"><div class="key">CPU</div><div class="val" style="font-size:12px">${sys.processor??'—'}</div></div>
-      <div class="sys-item"><div class="key">RAM</div><div class="val">${sys.ram??'—'}</div></div>
-      <div class="sys-item"><div class="key">Python</div><div class="val">${sys.python_version??'—'}</div></div>
-      <div class="sys-item"><div class="key">Judge</div><div class="val">LLM (Qwen 2.5-3B)</div></div>
-    </div>
-  </section>
-
-  <!-- Latency Charts -->
-  <section>
-    <h2>Latency Breakdown</h2>
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="card-title">Mean E2E Latency by Scenario (ms)</div>
-        <div class="chart-wrap"><canvas id="chartE2E"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Avg TTFT (Time to First Token) by Scenario (ms)</div>
-        <div class="chart-wrap"><canvas id="chartTTFT"></canvas></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Latency Table -->
-  <section>
-    <h2>Latency Details</h2>
-    <div class="card tbl-wrap">
-      <table>
-        <thead><tr>
-          <th>Scenario</th><th>Mean E2E (ms)</th><th>Median (ms)</th>
-          <th>P90 (ms)</th><th>95% CI</th><th>Avg TTFT (ms)</th>
-        </tr></thead>
-        <tbody id="latTbody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- RAG Results -->
-  <section>
-    <h2>RAG Correctness — Per Query</h2>
-    <div class="card tbl-wrap">
-      <table>
-        <thead><tr><th>Question</th><th>Expected</th><th>Actual Response</th><th>Judge</th></tr></thead>
-        <tbody id="ragTbody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- Tool Results -->
-  <section>
-    <h2>Tool Invocation — Per Case</h2>
-    <div class="card tbl-wrap">
-      <table>
-        <thead><tr><th>Prompt</th><th>Expected Tool</th><th>Actual Response</th><th>Judge</th></tr></thead>
-        <tbody id="toolTbody"></tbody>
-      </table>
-    </div>
-  </section>
-  `;
-
-  // Fill latency table
-  const latTbody = document.getElementById('latTbody');
-  for (const [name, m] of Object.entries(scen)) {
-    latTbody.innerHTML += `<tr>
+function updateLatTable() {
+  const tbody = $('lat-tbody');
+  tbody.innerHTML = '';
+  for (const [name, m] of Object.entries(S.lat)) {
+    tbody.innerHTML += `<tr>
       <td><strong>${name}</strong></td>
       <td>${ms(m.mean)}</td><td>${ms(m.median)}</td>
       <td>${ms(m.p90)}</td><td>±${ms(m.ci_95)}</td><td>${ms(m.ttft_avg)}</td>
     </tr>`;
   }
-
-  // Fill RAG table
-  const ragTbody = document.getElementById('ragTbody');
-  for (const r of (raw.rag || [])) {
-    ragTbody.innerHTML += `<tr>
-      <td title="${r.question}">${r.question}</td>
-      <td title="${r.expected}">${r.expected}</td>
-      <td title="${r.actual}">${r.actual}</td>
-      <td><span class="pill ${r.passed?'pill-pass':'pill-fail'}">${r.passed?'PASS':'FAIL'}</span></td>
-    </tr>`;
-  }
-
-  // Fill tool table
-  const toolTbody = document.getElementById('toolTbody');
-  for (const r of (raw.tools || [])) {
-    toolTbody.innerHTML += `<tr>
-      <td title="${r.prompt}">${r.prompt}</td>
-      <td>${r.expected_tool}</td>
-      <td title="${r.actual}">${r.actual}</td>
-      <td><span class="pill ${r.passed?'pill-pass':'pill-fail'}">${r.passed?'PASS':'FAIL'}</span></td>
-    </tr>`;
-  }
-
-  // Charts
-  const labels = Object.keys(scen);
-  const colors = ['#f97316','#3b82f6','#22c55e','#a855f7'];
-
-  new Chart(document.getElementById('chartE2E'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Mean E2E (ms)',
-        data: labels.map(k => scen[k]?.mean ?? 0),
-        backgroundColor: colors,
-        borderRadius: 6,
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
-        y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
-      }
-    }
-  });
-
-  new Chart(document.getElementById('chartTTFT'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Avg TTFT (ms)',
-        data: labels.map(k => scen[k]?.ttft_avg ?? 0),
-        backgroundColor: colors.map(c => c + 'cc'),
-        borderRadius: 6,
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
-        y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
-      }
-    }
-  });
 }
 
-load();
+// ── Event handlers ─────────────────────────────────────────────────
+const handlers = {
+  start(e) {
+    showDashboard();
+    setConn('live');
+    S.rag.total  = e.rag_total;
+    S.tool.total = e.tool_total;
+    log(`Eval started — ${e.rag_total} RAG + ${e.tool_total} tool cases`, 'info');
+  },
+
+  status(e) { log(e.message, 'info'); },
+
+  phase(e) { log(`▶ Phase: ${e.message}`, 'info'); },
+
+  rag_start(e) {
+    // Pre-insert a "pending" row
+    const tbody = $('rag-tbody');
+    const tr = document.createElement('tr');
+    tr.id = `rag-row-${e.idx}`;
+    tr.innerHTML = `<td>${e.idx+1}</td>
+      <td title="${e.question}">${e.question.slice(0,60)}…</td>
+      <td>—</td><td>—</td>
+      <td><span class="pill wait-pill">…</span></td>`;
+    tbody.appendChild(tr);
+  },
+
+  rag_result(e) {
+    S.rag.done   = e.progress.done;
+    S.rag.passed = e.progress.passed;
+    const pct_done = (S.rag.done / S.rag.total * 100).toFixed(0);
+    $('rag-bar').style.width = pct_done + '%';
+    $('rag-prog-label').textContent = `${S.rag.done}/${S.rag.total}  (${S.rag.passed} passed)`;
+    $('kpi-rag').textContent = pct(S.rag.passed / S.rag.total);
+    $('kpi-rag-sub').textContent = `${S.rag.passed} / ${S.rag.total}`;
+
+    const tr = $(`rag-row-${e.idx}`);
+    if (tr) {
+      tr.innerHTML = `<td>${e.idx+1}</td>
+        <td title="${e.question}">${e.question.slice(0,60)}</td>
+        <td title="${e.expected}">${e.expected.slice(0,40)}</td>
+        <td title="${e.actual}">${(e.actual||'').slice(0,50)}</td>
+        <td><span class="pill ${e.passed?'pass-pill':'fail-pill'}">${e.passed?'PASS':'FAIL'}</span></td>`;
+    }
+    log(`RAG #${e.idx+1}: ${e.passed?'✓ PASS':'✗ FAIL'} — ${e.question.slice(0,50)}`,
+        e.passed?'pass':'fail');
+  },
+
+  phase_done(e) {
+    if (e.phase === 'rag') {
+      $('kpi-rag').textContent = pct(e.precision);
+      $('kpi-rag').className   = 'kpi-val ' + (e.precision>=.6?'green':e.precision>=.4?'orange':'red');
+      log(`RAG complete: ${pct(e.precision)} (${e.passed}/${e.total})`, 'pass');
+    }
+    if (e.phase === 'tools') {
+      $('kpi-tool').textContent = pct(e.accuracy);
+      $('kpi-tool').className   = 'kpi-val ' + (e.accuracy>=.6?'green':e.accuracy>=.4?'orange':'red');
+      log(`Tool complete: ${pct(e.accuracy)} (${e.passed}/${e.total})`, 'pass');
+    }
+    if (e.phase === 'throughput') {
+      $('kpi-tps').textContent = e.tps.toFixed(2);
+      log(`Throughput: ${e.tps.toFixed(2)} turns/sec`, 'info');
+    }
+  },
+
+  tool_start(e) {
+    const tbody = $('tool-tbody');
+    const tr = document.createElement('tr');
+    tr.id = `tool-row-${e.idx}`;
+    tr.innerHTML = `<td>${e.idx+1}</td>
+      <td title="${e.prompt}">${e.prompt}</td>
+      <td>${e.expected_tool}</td><td>—</td>
+      <td><span class="pill wait-pill">…</span></td>`;
+    tbody.appendChild(tr);
+  },
+
+  tool_result(e) {
+    S.tool.done   = e.progress.done;
+    S.tool.passed = e.progress.passed;
+    const pct_done = (S.tool.done / S.tool.total * 100).toFixed(0);
+    $('tool-bar').style.width = pct_done + '%';
+    $('tool-prog-label').textContent = `${S.tool.done}/${S.tool.total}  (${S.tool.passed} passed)`;
+    $('kpi-tool').textContent = pct(S.tool.passed / S.tool.total);
+    $('kpi-tool-sub').textContent = `${S.tool.passed} / ${S.tool.total}`;
+
+    const tr = $(`tool-row-${e.idx}`);
+    if (tr) {
+      tr.innerHTML = `<td>${e.idx+1}</td>
+        <td title="${e.prompt}">${e.prompt}</td>
+        <td>${e.expected_tool}</td>
+        <td title="${e.actual}">${(e.actual||'').slice(0,50)}</td>
+        <td><span class="pill ${e.passed?'pass-pill':'fail-pill'}">${e.passed?'PASS':'FAIL'}</span></td>`;
+    }
+    log(`Tool #${e.idx+1}: ${e.passed?'✓ PASS':'✗ FAIL'} — ${e.prompt}`,
+        e.passed?'pass':'fail');
+  },
+
+  latency_start(e) { log(`⏱ Latency: ${e.scenario} (${e.trials} trials)`, 'info'); },
+
+  latency_trial(e) {
+    log(`  ${e.scenario} trial ${e.trial}: ${e.e2e.toFixed(0)}ms E2E, TTFT ${e.ttft.toFixed(0)}ms`, 'info');
+  },
+
+  latency_done(e) {
+    S.lat[e.scenario] = e.metrics;
+    updateCharts();
+    updateLatTable();
+    log(`  ${e.scenario} mean ${ms(e.metrics.mean)} P90 ${ms(e.metrics.p90)}`, 'info');
+  },
+
+  complete(e) {
+    setConn('done');
+    log('🎉 Eval complete! Results saved to eval_results.json', 'pass');
+    // Try to reload from JSON for full raw data
+    fetch('eval_results.json?' + Date.now())
+      .then(r => r.json())
+      .catch(() => null);
+  },
+};
+
+// ── SSE Connection ─────────────────────────────────────────────────
+function connect() {
+  const es = new EventSource('http://localhost:8765/events');
+  es.onmessage = ev => {
+    try {
+      const e = JSON.parse(ev.data);
+      if (handlers[e.type]) handlers[e.type](e);
+    } catch(_) {}
+  };
+  es.onerror = () => {
+    setConn('');
+    $('conn-label').textContent = 'Reconnecting…';
+    setTimeout(connect, 3000);
+  };
+}
+
+// Also try loading existing results from JSON on page load
+fetch('eval_results.json?' + Date.now())
+  .then(r => r.ok ? r.json() : null)
+  .then(d => {
+    if (!d) return;
+    showDashboard();
+    // Populate from existing JSON
+    const cor  = d.correctness || {};
+    const perf = d.performance  || {};
+    S.rag.total  = cor.rag_total  || 0;
+    S.rag.passed = cor.rag_passed || 0;
+    S.rag.done   = S.rag.total;
+    S.tool.total  = cor.tool_total  || 0;
+    S.tool.passed = cor.tool_passed || 0;
+    S.tool.done   = S.tool.total;
+
+    $('kpi-rag').textContent  = pct(cor.rag_precision  || 0);
+    $('kpi-rag-sub').textContent  = `${S.rag.passed} / ${S.rag.total}`;
+    $('kpi-tool').textContent = pct(cor.tool_accuracy  || 0);
+    $('kpi-tool-sub').textContent = `${S.tool.passed} / ${S.tool.total}`;
+    $('kpi-tps').textContent  = (perf.throughput || 0).toFixed(2);
+    $('rag-bar').style.width  = '100%';
+    $('tool-bar').style.width = '100%';
+    $('rag-prog-label').textContent  = `${S.rag.total}/${S.rag.total} (${S.rag.passed} passed)`;
+    $('tool-prog-label').textContent = `${S.tool.total}/${S.tool.total} (${S.tool.passed} passed)`;
+
+    for (const r of (d.raw?.rag || [])) {
+      $('rag-tbody').innerHTML += `<tr>
+        <td>${(d.raw.rag.indexOf(r)+1)}</td>
+        <td title="${r.question}">${r.question.slice(0,60)}</td>
+        <td title="${r.expected}">${r.expected.slice(0,40)}</td>
+        <td title="${r.actual}">${(r.actual||'').slice(0,50)}</td>
+        <td><span class="pill ${r.passed?'pass-pill':'fail-pill'}">${r.passed?'PASS':'FAIL'}</span></td>
+      </tr>`;
+    }
+    for (const r of (d.raw?.tools || [])) {
+      $('tool-tbody').innerHTML += `<tr>
+        <td>${(d.raw.tools.indexOf(r)+1)}</td>
+        <td title="${r.prompt}">${r.prompt}</td>
+        <td>${r.expected_tool}</td>
+        <td title="${r.actual}">${(r.actual||'').slice(0,50)}</td>
+        <td><span class="pill ${r.passed?'pass-pill':'fail-pill'}">${r.passed?'PASS':'FAIL'}</span></td>
+      </tr>`;
+    }
+    S.lat = perf.scenarios || {};
+    updateCharts();
+    updateLatTable();
+    log(`Loaded previous results from ${d.generated_at}`, 'info');
+  })
+  .catch(() => {});
+
+connect();
 </script>
 </body>
 </html>

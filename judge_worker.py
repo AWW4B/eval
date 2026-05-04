@@ -21,7 +21,7 @@ MODEL_PATH = os.getenv(
 JUDGE_SYSTEM = (
     "You are a strict automated evaluator. "
     "You receive a question, a reference answer, and an AI's actual response. "
-    "Decide if the AI's response correctly addresses the question. "
+    "Decide if the AI's response correctly addresses the question.But don't be too strict. If reference answer and actual response have same meaning then output YES. "
     "Reply with exactly ONE word: YES or NO. Nothing else."
 )
 

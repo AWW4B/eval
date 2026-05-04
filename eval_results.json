@@ -1,5 +1,5 @@
 {
-  "generated_at": "Tue May  5 00:31:10 2026",
+  "generated_at": "Tue May  5 01:49:20 2026",
   "system": {
     "os": "Linux",
     "processor": "",
@@ -7,351 +7,683 @@
     "python_version": "3.14.4"
   },
   "correctness": {
-    "rag_precision": 0.0,
-    "rag_passed": 0,
+    "rag_precision": 0.5483870967741935,
+    "rag_passed": 17,
     "rag_total": 31,
-    "tool_accuracy": 0.0,
-    "tool_passed": 0,
+    "tool_accuracy": 0.625,
+    "tool_passed": 5,
     "tool_total": 8
   },
   "performance": {
     "scenarios": {
       "simple": {
-        "mean": 18169.035721799944,
-        "median": 18406.17664599995,
-        "p90": 20807.369696000023,
-        "std": 2857.785140220471,
-        "ci_95": 2504.9591207397225,
-        "ttft_avg": 15995.068127800005,
-        "itl_avg": 70.49014958333696,
+        "mean": 18516.6441379999,
+        "median": 18298.50967999937,
+        "p90": 20368.038452999826,
+        "std": 1067.1122634928738,
+        "ci_95": 935.3651398311433,
+        "ttft_avg": 16260.161635400073,
+        "itl_avg": 65.97485602570693,
         "samples": [
-          13737.054622999949,
-          17398.597532999927,
-          20807.369696000023,
-          18406.17664599995,
-          20495.98011099988
+          17887.000626999907,
+          17715.17203300027,
+          18314.499897000132,
+          18298.50967999937,
+          20368.038452999826
         ]
       },
       "rag": {
-        "mean": 20161.069663999933,
-        "median": 20055.466361999832,
-        "p90": 24164.729610999984,
-        "std": 2746.6924207432203,
-        "ci_95": 2407.582058697595,
-        "ttft_avg": 15550.859275199991,
-        "itl_avg": 66.56013980861111,
+        "mean": 22530.668804000015,
+        "median": 21446.92331799979,
+        "p90": 28594.271467999533,
+        "std": 3700.472234986689,
+        "ci_95": 3243.606926782078,
+        "ttft_avg": 18090.98192720012,
+        "itl_avg": 62.5073293812041,
         "samples": [
-          18791.79854899985,
-          16767.762801000117,
-          21025.590996999883,
-          24164.729610999984,
-          20055.466361999832
+          23260.188439000558,
+          19703.428604000692,
+          19648.532190999504,
+          28594.271467999533,
+          21446.92331799979
         ]
       },
       "tool": {
-        "mean": 25160.07518280012,
-        "median": 24101.315159000023,
-        "p90": 29229.832115000136,
-        "std": 2294.509954554673,
-        "ci_95": 2011.2266515062072,
-        "ttft_avg": 23316.506300200082,
-        "itl_avg": 70.31191229686756,
+        "mean": 23950.554079399808,
+        "median": 23116.9694780001,
+        "p90": 26439.861726000345,
+        "std": 1723.3367491622737,
+        "ci_95": 1510.5712627461362,
+        "ttft_avg": 21775.33086099993,
+        "itl_avg": 72.90470112066006,
         "samples": [
-          29229.832115000136,
-          24641.584002999934,
-          24101.315159000023,
-          23907.343741000204,
-          23920.3008960003
+          23116.9694780001,
+          26439.861726000345,
+          22402.3882879992,
+          22759.796833999644,
+          25033.75407099975
         ]
       },
       "mixed": {
-        "mean": 32420.875707999858,
-        "median": 29518.494632000056,
-        "p90": 47852.151300000056,
-        "std": 9131.143268361035,
-        "ci_95": 8003.799967655192,
-        "ttft_avg": 25790.190979,
-        "itl_avg": 68.31858167846912,
+        "mean": 28278.938887999902,
+        "median": 26708.5607529998,
+        "p90": 33530.501303000165,
+        "std": 3439.139838903112,
+        "ci_95": 3014.5389818546932,
+        "ttft_avg": 23134.165165800005,
+        "itl_avg": 64.83070311166563,
         "samples": [
-          25880.62964599976,
-          25803.27578499964,
-          47852.151300000056,
-          33049.82717699977,
-          29518.494632000056
+          29953.125125999577,
+          33530.501303000165,
+          26708.5607529998,
+          25849.084002999916,
+          25353.423255000052
         ]
       }
     },
-    "throughput": 0.05303732757787786,
-    "throughput_secs": 282.82
+    "throughput": 0.04919915826144903,
+    "throughput_secs": 304.88
   },
   "raw": {
     "rag": [
       {
         "question": "What is Daraz's return policy for electronics?",
         "expected": "Electronic items can be returned within 7-14 days if damaged or defective.",
-        "actual": "Based on our internal policies, Daraz Pakistan provides refunds to customers within 24 hours of receiving the returned electronic item in its original, unsealed condition along with all manufacturer tags and manuals. If the item is in good condition and all accessories are included, you should be eligible for a refund to your Daraz Wallet. Please ensure the item is not damaged and all original packaging is intact.",
-        "passed": false,
-        "doc_id": "returns_and_refunds_01.txt"
+        "actual": "For electronic items on Daraz, if you decide to return the product, the refund to your Daraz Wallet is credited within 24 hours after we confirm it meets the quality standards. It's important to return the item in its original, unsealed condition with all manufacturer tags and manuals attached. We also keep all transactions logged for audit transparency. Is there anything else I can help you with regarding this order?",
+        "passed": true,
+        "doc_id": "returns_and_refunds_01.txt",
+        "metrics": {
+          "ttft": 12619.422499999928,
+          "itl": 65.0037637073205,
+          "e2e": 17949.73112400021
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How long do I have to return an item?",
         "expected": "Typically 7 days for marketplace and 14 days for Daraz Mall.",
-        "actual": "The 14-day change of mind policy applies, which means the 14-day window starts from the exact time of delivery recorded by the courier. For items that are non-returnable, such as lingerie and hygiene products, the process is a bit different. These items should be returned in their original, unsealed condition with all manufacturer tags and manuals attached.",
-        "passed": false,
-        "doc_id": "returns_and_refunds_02.txt"
+        "actual": "The 14-day window for returns, whether it's for an electronic item or any other category, starts from the exact time of delivery recorded by the courier. It's important to keep the item in its original, unsealed condition with all manufacturer tags and manuals attached. For refunds to Daraz Wallet, they are typically credited within 24 hours of a successful quality check.\n\nWould you like to know something else about this order, or is there another product you're interested in finding?",
+        "passed": true,
+        "doc_id": "returns_and_refunds_02.txt",
+        "metrics": {
+          "ttft": 20221.788281000045,
+          "itl": 73.80096591835967,
+          "e2e": 27454.282940999292
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Can I return a product if I changed my mind?",
         "expected": "No, 'change of mind' is not applicable for all categories.",
-        "actual": "Sure, you can return a product if you changed your mind. We have a detailed policy in place for this. For most items, you should be able to return them within the 14-day period. You can find the specifics by checking out the 14-Day Change of Mind Policy. Would you like to proceed with that or do you have any other questions?",
-        "passed": false,
-        "doc_id": "returns_and_refunds_04.txt"
+        "actual": "Sure, based on our policies, we do offer a 14-day change of mind policy for most products. This means you have 14 days from the date of purchase to return the product for a full refund if you decide to return it. However, it’s important to note that certain health and beauty products are non-returnable once the seal is broken. Additionally, shipping fees are non-refundable unless the return is due to a seller error or a faulty product. If you need to return a product, we recommend keeping all original packaging and product as it was received. What other details do you need on this?",
+        "passed": true,
+        "doc_id": "returns_and_refunds_04.txt",
+        "metrics": {
+          "ttft": 22079.249085999436,
+          "itl": 65.45154055555983,
+          "e2e": 30326.143195999975
+        },
+        "tools_used": [
+          "Product Search",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How do I track my order?",
         "expected": "Use the 'My Orders' section in the Daraz app.",
-        "actual": "To track your order, you can visit our tracking page [here](#). If you need immediate assistance, please reply here, and I'll guide you through it. Would you like to collect your order at a Daraz Shop instead?",
-        "passed": false,
-        "doc_id": "shipping_and_logistics_02.txt"
+        "actual": "Sure thing! To track your order, you can usually find the tracking number on the order confirmation email or through your Daraz app. If you need to check the status, log in to your Daraz account, head to the orders section, and select the order number. There you'll find the status and tracking information. Is there anything else you need help with regarding your order?",
+        "passed": true,
+        "doc_id": "shipping_and_logistics_02.txt",
+        "metrics": {
+          "ttft": 31170.672623000428,
+          "itl": 74.83916421052814,
+          "e2e": 36858.44910300057
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Does Daraz deliver to rural areas?",
         "expected": "Yes, Daraz delivers nationwide across Pakistan.",
-        "actual": "According to our shipping policy, deliveries to rural areas like Gilgit-Baltistan may incur an additional 3-5 days lead time. Your package is currently estimated to arrive by Friday, May 08, which is 4 days from now.",
+        "actual": "Based on the shipping update, delivery to rural areas like Gilgit-Baltistan may incur an additional 3-5 days lead time. For example, if you ordered today, your package would likely arrive by Friday, May 8. However, in case of three failed delivery attempts, the package might be returned to the seller. It's also important to note that shipping costs to rural areas might be a bit higher. Does that help clarify your query?",
         "passed": false,
-        "doc_id": "shipping_and_logistics_05.txt"
+        "doc_id": "shipping_and_logistics_05.txt",
+        "metrics": {
+          "ttft": 24042.22756999934,
+          "itl": 74.08287675824904,
+          "e2e": 30783.769355000004
+        },
+        "tools_used": [
+          "Shipping",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What are the shipping charges for Karachi?",
         "expected": "Shipping depends on weight and seller location.",
-        "actual": "Shipping to Karachi costs 150 PKR. Your package is estimated to arrive by Tuesday, May 05.",
+        "actual": "Shipping to Karachi costs 150 PKR. Your package is expected to arrive by Tuesday, May 05. Is there anything else you need help with regarding this?",
         "passed": false,
-        "doc_id": "shipping_and_logistics_07.txt"
+        "doc_id": "shipping_and_logistics_07.txt",
+        "metrics": {
+          "ttft": 19666.67042500012,
+          "itl": 66.14948645713282,
+          "e2e": 21981.90245099977
+        },
+        "tools_used": [
+          "Shipping",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is the delivery time for Global Collection?",
         "expected": "Approximately 15 to 30 days.",
-        "actual": "Delivery for Global Collection items can be a bit tricky due to customs clearance. Normally, you get 3-5 extra days for items going to remote areas like Gilgit-Baltistan, but your package is from Karachi so it should be faster. However, specific delivery times can vary. Please check your local delivery status or call Daraz for an update. If you decide to collect your items, it's free at designated Daraz Shops.",
-        "passed": false,
-        "doc_id": "shipping_and_logistics_09.txt"
+        "actual": "I couldn't retrieve the specific delivery times for Global Collection items from our current knowledge base. Typically, Global Collection items can be a bit longer in transit due to customs clearance, which is handled by Daraz. It's usually around 7-10 business days, but this can vary based on your location and the customs process. Would you like to know how to proceed with returning a product or do you have any other questions related to shopping on Daraz?",
+        "passed": true,
+        "doc_id": "shipping_and_logistics_09.txt",
+        "metrics": {
+          "ttft": 24601.95151300013,
+          "itl": 76.33937702173725,
+          "e2e": 31625.174198999957
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How do I pay using Daraz Wallet?",
         "expected": "Select Daraz Wallet at the checkout page.",
-        "actual": "To pay using Daraz Wallet, you can initiate a HBL Direct Transfer. Here’s how you can do it:\n\n1. Go to the product page you want to purchase.\n2. Click on the \"Buy Now\" or \"Add to Cart\" button.\n3. Once the product is added to your cart, head to the checkout.\n4. In the payment section, select \"HBL Direct Transfer\" as your payment method.\n5. Follow the prompts to enter your HBL wallet details and complete the payment.\n\nAfter the payment is confirmed, your order will be processed, and the transaction will be credited to your Daraz Wallet within 24 hours.\n\nIs there anything else you need help with regarding this product or your order?",
-        "passed": false,
-        "doc_id": "seller_and_product_info_01.txt"
+        "actual": "To pay using Daraz Wallet, you can follow these steps:\n\n1. Log in to your Daraz account.\n2. Go to the order you want to pay for.\n3. Tap on the payment option which usually includes Daraz Wallet.\n4. Confirm your payment by entering the password or biometric authentication.\n5. Once the payment is confirmed, the order should be marked as paid.\n\nIs there anything else you need help with regarding your order?",
+        "passed": true,
+        "doc_id": "seller_and_product_info_01.txt",
+        "metrics": {
+          "ttft": 18240.524347000246,
+          "itl": 53.80421547777385,
+          "e2e": 23082.903739999892
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Is Cash on Delivery available for all items?",
         "expected": "COD is available for most items below a certain price threshold.",
-        "actual": "For all items, Cash on Delivery is available, but we typically issue a voucher or wallet credit instead of cash. For more information, you can contact our customer service.",
-        "passed": false,
-        "doc_id": "seller_and_product_info_02.txt"
+        "actual": "For items purchased through Daraz, Cash on Delivery (COD) is usually not available. Instead, we issue vouchers or wallet credits. However, for certain items or special campaigns, the terms might change. Would you like to proceed with another product search or check your order details?",
+        "passed": true,
+        "doc_id": "seller_and_product_info_02.txt",
+        "metrics": {
+          "ttft": 28525.202882000485,
+          "itl": 69.16497249091084,
+          "e2e": 32329.27636900058
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is Daraz Mall?",
         "expected": "A premium channel for 100% authentic brands.",
-        "actual": "Daraz Mall is a section on Daraz where you can find authentic products. It's a trusted marketplace where sellers must comply with specific guidelines to maintain their store. For example, selling counterfeit products could lead to permanent store closure and a hefty fine. If you buy something from Daraz Mall and it's not authentic, you're eligible for a double money-back guarantee. It’s a safe place to shop for items like electronics, clothing, and home goods.",
+        "actual": "Daraz Mall is Daraz's online marketplace where you can find a variety of products, from electronics to clothing and everything in between. They take extra steps to ensure the authenticity of the products sold there, offering a 2x money-back guarantee if any product turns out to be counterfeit. If you're interested in shopping on Daraz Mall, we can help you find what you're looking for. Do you have a specific product in mind?",
         "passed": false,
-        "doc_id": "seller_and_product_info_04.txt"
+        "doc_id": "seller_and_product_info_04.txt",
+        "metrics": {
+          "ttft": 18237.918426999386,
+          "itl": 56.543054136372206,
+          "e2e": 23213.70719100014
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How can I contact a seller?",
         "expected": "Use the 'Chat Now' button on the product page.",
-        "actual": "If you have a specific seller in mind, you can usually reach out to them through the \"Contact Seller\" option available on the product page. If you can provide more details, I can help you find the right seller.",
-        "passed": false,
-        "doc_id": "seller_and_product_info_05.txt"
+        "actual": "To contact a seller, you can typically use the \"Contact Seller\" feature within the Daraz app. If you can't find it, you might want to try messaging the seller through the comments section of the product page or directly message them through the contact link provided. If you need help navigating the app, feel free to ask!",
+        "passed": true,
+        "doc_id": "seller_and_product_info_05.txt",
+        "metrics": {
+          "ttft": 13412.25876000044,
+          "itl": 77.49788924241908,
+          "e2e": 18527.1194500001
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How do I use a voucher?",
         "expected": "Enter the code at the checkout screen.",
-        "actual": "Hi! To use a voucher, you need to check if your order qualifies. Usually, for Cash on Delivery orders, we issue a voucher or wallet credit instead of cash. Just make sure to use it before the 14-day window from the delivery date. For any questions, feel free to ask!",
-        "passed": false,
-        "doc_id": "seller_and_product_info_06.txt"
+        "actual": "Hello! To use a voucher on Daraz, you need to go to the product page, check if the voucher is applicable there. If it’s a voucher code, just enter it during checkout. If it’s a voucher for free items, you might see an option to select it during the checkout process as well. Is there a specific voucher you want to use, or do you need help with something else?",
+        "passed": true,
+        "doc_id": "seller_and_product_info_06.txt",
+        "metrics": {
+          "ttft": 16272.947122000005,
+          "itl": 71.4652324999983,
+          "e2e": 22133.096186999865
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What happens if my order is delayed?",
         "expected": "You can contact support or check the tracking status.",
-        "actual": "If your order is delayed, Daraz will notify you via our app or email as soon as we receive the latest information. We strive to ensure all items are delivered within the promised timeframe. If there are any issues, you can contact our customer service team at 1800-121-2121 or through our live chat on the app, and they will assist you with any concerns you might have.\n\nIf the delivery is delayed due to customs clearance for Global Collection items, we’ll handle it and contact you when the item is ready to be collected.",
-        "passed": false,
-        "doc_id": "shipping_and_logistics_11.txt"
+        "actual": "If your order is delayed, it's best to check your Daraz account for the most accurate information. Generally, for items being shipped from Karachi, your package should arrive by Tuesday, May 05. \n\nIf it doesn't arrive on time, you can contact Daraz customer service at +92-333-1111111 for further assistance. They can help track your package and provide updates on its location.\n\nRemember, we have a 14-day change of mind policy, so if you decide you don't want the product, you have 14 days from the delivery date to request a refund. Always make sure to keep the packaging as it will be checked by our staff.\n\nIs there something specific you need help with regarding your order?",
+        "passed": true,
+        "doc_id": "shipping_and_logistics_11.txt",
+        "metrics": {
+          "ttft": 17936.93438000082,
+          "itl": 64.4508112974638,
+          "e2e": 28120.1625650001
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Can I cancel my order after shipping?",
         "expected": "No, you must refuse delivery or return it later.",
-        "actual": "You can cancel your order, but keep in mind that shipping fees are usually non-refundable. For Cash on Delivery orders, we typically issue a voucher or wallet credit instead of cash. If you need more assistance, feel free to ask!",
+        "actual": "To cancel your order, you would first need to check your eligibility, which is typically based on your order type and whether there are any shipping fees involved. For Cash on Delivery orders, we usually issue a voucher or wallet credit instead of refunding cash.\n\nSince your order is still in transit, it’s best to reach out to Daraz Customer Support directly to initiate the cancellation process. They can confirm if you are eligible for a refund and guide you through the steps.\n\nYou can contact Daraz Support through the official Daraz app, website, or by calling the support hotline if you prefer.\n\nWould you like to proceed with contacting support? Or do you have any other questions about your order?",
         "passed": false,
-        "doc_id": "returns_and_refunds_07.txt"
+        "doc_id": "returns_and_refunds_07.txt",
+        "metrics": {
+          "ttft": 29801.451118999466,
+          "itl": 65.46231915217504,
+          "e2e": 38835.25116199962
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is the refund process?",
         "expected": "Refunds are processed after quality check of the returned item.",
-        "actual": "Sure, for a Daraz order that you want to refund, the process generally goes like this:\n\n- For orders made through HBL Direct Transfer, your refund will be credited to your Daraz Wallet within 24 hours of the quality check being successful.\n- For Cash on Delivery orders, we issue a voucher or Daraz Wallet credit as a refund. The refund process for non-returnable items like lingerie and hygiene products can take up to 10-14 working days from the delivery date, depending on your bank's cycle. We verify the packaging before issuing the refund.\n\nIf you need help with something specific or have a particular order in mind, just let me know!",
-        "passed": false,
-        "doc_id": "returns_and_refunds_08.txt"
+        "actual": "Sure, let me explain the refund process for you. For orders placed through HBL Direct Transfer, refunds are usually credited to your Daraz Wallet within 24 hours of the successful quality check. For Cash on Delivery orders, we issue a voucher or wallet credit as an alternative. \n\nFor non-returnable categories like lingerie and hygiene items, if you're returning these, it can take up to 10-14 working days depending on your bank's cycle. Before we process the refund, we usually verify the packaging of the returned item. \n\nWould you like to know more about the specifics for your order or anything else I can assist with?",
+        "passed": true,
+        "doc_id": "returns_and_refunds_08.txt",
+        "metrics": {
+          "ttft": 16378.464190999694,
+          "itl": 64.85593651144993,
+          "e2e": 24874.591873999634
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How do I get a refund on my bank card?",
         "expected": "It takes 5-10 working days after approval.",
-        "actual": "I see you're asking about a refund process related to your bank card. Usually, credit card refunds can take anywhere from 10 to 14 working days depending on your bank's processing cycle. It's important to note that staff members will verify the packaging before approving the refund. Would you like to know how to proceed with a specific product's refund or need help with something else?",
-        "passed": false,
-        "doc_id": "returns_and_refunds_09.txt"
+        "actual": "For a bank card refund on Daraz, it typically takes around 10-14 working days, depending on your bank's cycle. We also verify the packaging to ensure a smooth refund process. If you have any other questions or need help with an order, feel free to ask!",
+        "passed": true,
+        "doc_id": "returns_and_refunds_09.txt",
+        "metrics": {
+          "ttft": 19606.443972000307,
+          "itl": 69.6915401206846,
+          "e2e": 23648.553299000014
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is the warranty policy?",
         "expected": "Varies by brand and seller, check product description.",
-        "actual": "I see you're asking about the warranty policy. For electronic items on Daraz, we have a strict protocol. Refunds to Daraz Wallet are typically credited within 24 hours after we confirm the item's quality. It's important to note that the item must be in its original condition with all manufacturer tags and manuals intact. Would you like to find a specific product or track an order?",
+        "actual": "The warranty policy for electronic items on Daraz Pakistan states that refunds are credited to Daraz Wallet within 24 hours of a successful quality check. It's important to note that the items need to be in their original, unsealed condition with all manufacturer tags and manuals intact. Would you like more information on something else or is there another product you're looking to find?",
         "passed": false,
-        "doc_id": "product_8.txt"
+        "doc_id": "product_8.txt",
+        "metrics": {
+          "ttft": 18037.267281999448,
+          "itl": 66.51999066215885,
+          "e2e": 22959.746590999202
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Are products on Daraz original?",
         "expected": "Daraz Mall items are 100% authentic.",
-        "actual": "From the information we have, most of the products on Daraz are original and of high quality. If you're looking for specific products like the J. Professional Makeup Kit or the Service Advanced Skin Care Serum, they are available and of good quality. However, for the most accurate and up-to-date information, I recommend checking the latest product listings and reviews.\n\nAs for the stock and prices, you can see the details for those products. Just keep in mind that if you find any products that seem like they might be counterfeit, you can get a 2x money-back guarantee if you return it.",
-        "passed": false,
-        "doc_id": "seller_and_product_info_07.txt"
+        "actual": "Based on the information provided, products on Daraz are generally considered authentic, especially those sold on the Daraz Mall. However, the authenticity can be affected if the seller doesn't maintain a 90% positive rating and participate in the 'Global Collection' program. If you have any specific product in mind, I can help you check the authenticity. Otherwise, for most items in Daraz Mall, you can trust they are original.",
+        "passed": true,
+        "doc_id": "seller_and_product_info_07.txt",
+        "metrics": {
+          "ttft": 21539.48852600024,
+          "itl": 67.88400965517171,
+          "e2e": 27445.39736600018
+        },
+        "tools_used": [
+          "Product Search",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How do I rate a seller?",
         "expected": "Go to 'My Orders' and click 'Review'.",
-        "actual": "To rate a seller on Daraz, you can do it directly through the website or app. Once you've made a purchase from a seller, you'll see a feedback section where you can rate them and leave a comment. This helps other customers know how their experience was.\n\nIf you haven't made a purchase yet but want to leave a review, you can also do that. Just make sure your feedback is helpful and accurate.",
+        "actual": "To rate a seller on Daraz, go to the product page, find the seller name, and leave a rating and review. It's important to provide helpful feedback so other buyers can make informed decisions. If you want to leave a positive review, it's great to mention what you liked about the product and the seller. If you have concerns, it's best to mention those too, so the seller can improve. This helps maintain the integrity of the marketplace.",
         "passed": false,
-        "doc_id": "seller_and_product_info_08.txt"
+        "doc_id": "seller_and_product_info_08.txt",
+        "metrics": {
+          "ttft": 20723.938932000237,
+          "itl": 67.4696448586968,
+          "e2e": 26931.146259000343
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is a 'Verified User' review?",
         "expected": "A review from someone who actually bought the item.",
-        "actual": "It looks like you asked about what a 'Verified User' review is, but in the information I found, it's actually talking about review integrity and manipulation. There's no specific information about 'Verified User' reviews on Daraz. \n\nIf you're looking for reviews of a product, we can certainly help with that. Could you please tell me which product you're interested in?",
+        "actual": "I understand you're looking for information on 'Verified User' reviews. Unfortunately, the policy information we have doesn’t specifically define what a 'Verified User' review is. This term isn’t a part of the policies we have on review integrity and verification on Daraz. \n\nIf you need more information on a particular seller or product, or if you have any other questions about shopping on Daraz, feel free to ask!",
         "passed": false,
-        "doc_id": "seller_and_product_info_09.txt"
+        "doc_id": "seller_and_product_info_09.txt",
+        "metrics": {
+          "ttft": 16449.92374799949,
+          "itl": 65.99969275000495,
+          "e2e": 21993.897938999908
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How to report a fake item?",
         "expected": "Contact help center with order details.",
-        "actual": "To report a fake item, you can follow these steps:\n\n1. Go to the product you purchased from a seller you suspect of selling a fake item.\n2. Look for the \"Report\" button or the \"Feedback\" section on the product page.\n3. Fill out the form with details about the fake item, including any photos or videos if possible.\n4. Submit the report. Your feedback will help us in identifying and removing fake products from the platform.\n\nRemember, you can also contact our customer service if you need more assistance.",
+        "actual": "To report a fake item on Daraz, you should contact the seller directly first. If the seller doesn't respond or doesn't take appropriate action, you can report it to Daraz support. They will investigate and take the necessary actions. Make sure to provide them with the item's name, seller ID, and any relevant photos or videos. If it's an urgent issue, you can also report it through the feedback section while you're shopping. Remember, always try to resolve things directly with the seller first.",
         "passed": false,
-        "doc_id": "returns_and_refunds_10.txt"
+        "doc_id": "returns_and_refunds_10.txt",
+        "metrics": {
+          "ttft": 22268.707249999352,
+          "itl": 64.83625775490509,
+          "e2e": 28882.00554099967
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What are Daraz Coins?",
         "expected": "Virtual currency for additional discounts.",
-        "actual": "I'm sorry, but \"Daraz Coins\" isn't something we've talked about yet. It seems like you might have mixed up some topics. Have you been looking at a specific product or trying to figure out how to use Daraz Coins? If so, do you have more details? Otherwise, I can help you find products, track orders, or answer other questions.",
+        "actual": "Daraz Coins are a reward system on Daraz where customers earn coins by completing certain actions such as shopping, leaving positive reviews, or referring friends. These coins can be redeemed for discounts or other benefits on future purchases. It’s a way to thank and encourage loyal customers! Would you like to know more about earning or redeeming Daraz Coins?",
         "passed": false,
-        "doc_id": "seller_and_product_info_10.txt"
+        "doc_id": "seller_and_product_info_10.txt",
+        "metrics": {
+          "ttft": 16123.396089999915,
+          "itl": 65.95747268115899,
+          "e2e": 20674.461704999885
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How to earn more coins?",
         "expected": "Play games or complete daily missions in the app.",
-        "actual": "To earn more coins, you can check for promotional offers and deals on the Daraz app, which often reward customers with coins for purchases, referrals, and more. It’s also a good idea to sign up for any available vouchers or rewards programs. How can I assist you further with your Daraz shopping?",
+        "actual": "To earn more coins on Daraz, you can check out our weekly promotions and flash sales. Sometimes we also offer coins as part of a bundle deal with your purchase. Additionally, using your wallet to pay can earn you coins back.\n\nAlso, keep an eye out for freebies and returns—sometimes we give away coins if the return is due to a seller error or if the item is faulty. It's also helpful to redeem your coins for discount codes, as you get coins back after each use.\n\nFor more information on how to use your wallet and earn coins, check out the help center. Is there a specific type of coins you're interested in, or would you like more detailed information?",
         "passed": false,
-        "doc_id": "seller_and_product_info_15.txt"
+        "doc_id": "seller_and_product_info_15.txt",
+        "metrics": {
+          "ttft": 15785.364278999623,
+          "itl": 63.15948363309296,
+          "e2e": 24564.532503999544
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Is there a limit on coin usage?",
         "expected": "Yes, usually a percentage of the total order value.",
-        "actual": "I see you're asking about coin usage. Unfortunately, it seems you've asked about a topic that's not related to Daraz. I'm here to help with shopping, orders, and anything related to products and sellers on Daraz. Would you like to know more about a product, track an order, or anything specific?",
+        "actual": "It looks like there are some compliance updates regarding counterfeit listings and penalties. Currently, there's a mandatory fine of up to Rs. 50,000 for counterfeit listings. Is there anything else you'd like to know about the policy, or is there a particular product or seller you're looking for information on?",
         "passed": false,
-        "doc_id": "seller_and_product_info_18.txt"
+        "doc_id": "seller_and_product_info_18.txt",
+        "metrics": {
+          "ttft": 16902.020178000384,
+          "itl": 65.50151653124203,
+          "e2e": 21094.117235999875
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How do I update my shipping address?",
         "expected": "Go to Account Settings > Address Book.",
-        "actual": "To update your shipping address, you'll need to go to your account settings on the Daraz app or website. There you can enter your new address and save it. If you want to proceed with this now, you can contact our support team for assistance.\n\nExample refusal: I'm only here to help with your Daraz shopping experience. Is there a product I can help you find or an order I can assist with?",
-        "passed": false,
-        "doc_id": "shipping_and_logistics_12.txt"
+        "actual": "To update your shipping address on Daraz, you can do it directly through your Daraz account settings. Log in to your Daraz account, go to the settings section, and find the option to update your shipping address there. Alternatively, if you prefer to manage your addresses elsewhere, you can add new addresses and save them for future use. If you need step-by-step instructions, I can guide you through that as well!\n\nWould you like help with updating your current shipping address now, or do you have another question?",
+        "passed": true,
+        "doc_id": "shipping_and_logistics_12.txt",
+        "metrics": {
+          "ttft": 18363.853601999836,
+          "itl": 65.9469415384662,
+          "e2e": 25222.33552200032
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Can I pick up my order from a shop?",
         "expected": "Yes, using Daraz Pick-up points.",
-        "actual": "According to the Self-Collection at Daraz Shops policy, customers can indeed choose to pick up items from designated 'Daraz Shops' to save on shipping costs. However, there are some specifics to keep in mind:\n\n1. Light and medium-sized items can be picked up directly.\n2. Heavy appliances over 20kg will require specialized handling and might take longer to route.\n3. Items for wholesale ordering and global collection items may have additional handling and processing.\n\nIs there a specific item you'd like to check for availability at a Daraz Shop, or do you need assistance with another part of your order?",
-        "passed": false,
-        "doc_id": "shipping_and_logistics_13.txt"
+        "actual": "Sure, you can pick up your order at a designated Daraz Shop to save on shipping costs. These shops are set up for self-collection. Just make sure you check the pickup hours and choose the shop closest to you. If you need more details or assistance with finding a shop near you, let me know!",
+        "passed": true,
+        "doc_id": "shipping_and_logistics_13.txt",
+        "metrics": {
+          "ttft": 19125.98308500037,
+          "itl": 64.74936193548743,
+          "e2e": 23140.44352500059
+        },
+        "tools_used": [
+          "Product Search",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is the bulk order policy?",
         "expected": "Contact Daraz for Business for large orders.",
-        "actual": "The bulk order policy allows customers to pick up items at designated Daraz Shops to save on shipping costs. All transactions are logged for audit transparency. Sounds like a convenient option for large orders! Is there anything else you need help with related to this policy?",
+        "actual": "The bulk order policy allows customers to pick up items at designated Daraz Shops to save on shipping costs. Standard packaging requires double-bubble wrap for all electronic and glass surfaces. If you have any other questions or need help with your order, feel free to ask!",
         "passed": false,
-        "doc_id": "seller_and_product_info_20.txt"
+        "doc_id": "seller_and_product_info_20.txt",
+        "metrics": {
+          "ttft": 20970.293883000522,
+          "itl": 66.3690060576895,
+          "e2e": 24421.482198000376
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Do you ship to Azad Kashmir?",
         "expected": "Yes, we ship to most cities in AJK.",
-        "actual": "The current shipping policy allows us to ship to Azad Kashmir. For your order, it's estimated to arrive by Friday, May 08. Please note that it might take an additional 3-5 days due to the remote nature of the area. If you have any more questions or need to track your order, let me know!",
+        "actual": "Shipping to Azad Kashmir is currently not supported. Your package will be delivered to Karachi instead, expected to arrive by Friday, May 8th. Is there another product you'd like to check or an order you need help with?",
         "passed": false,
-        "doc_id": "shipping_and_logistics_14.txt"
+        "doc_id": "shipping_and_logistics_14.txt",
+        "metrics": {
+          "ttft": 15747.270159000436,
+          "itl": 68.96006663043369,
+          "e2e": 18919.433224000386
+        },
+        "tools_used": [
+          "Shipping",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "What is the maximum weight for a package?",
         "expected": "Depends on the courier, usually up to 30kg for standard shipping.",
-        "actual": "The maximum weight for a package that requires specialized handling, such as heavy appliances over 20kg, is 20kg. For standard packages, the maximum weight can vary and is typically within a reasonable range to accommodate various items. Do you need help finding a product or tracking an order?",
+        "actual": "The maximum weight for a package that requires specialized handling and delivery to remote areas like Gilgit-Baltistan is 20kg. For the upcoming campaign season, packages heavier than that might need additional attention and could take longer to deliver. Would you like to find a specific product or track an order?",
         "passed": false,
-        "doc_id": "shipping_and_logistics_15.txt"
+        "doc_id": "shipping_and_logistics_15.txt",
+        "metrics": {
+          "ttft": 15503.962906999732,
+          "itl": 66.61338783333122,
+          "e2e": 19500.766176999605
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "question": "How to use Daraz on a desktop?",
         "expected": "Visit www.daraz.pk on your browser.",
-        "actual": "Hey! To use Daraz on a desktop, you can visit our website at [www.daraz.com.pk] and log in with your account details. Once logged in, you can browse products, add items to the cart, and place orders directly from your computer. If you have any specific product questions or need help with a purchase, feel free to ask!\n\nIf you have more questions or need assistance with anything specific, just let me know!",
-        "passed": false,
-        "doc_id": "seller_and_product_info_23.txt"
+        "actual": "To use Daraz on a desktop, you can simply open your web browser and go to daraz.pk. Once there, you should be able to browse and shop as you would on a mobile device. If you need to search for a product or track an order, you can use the search bar at the top and the order history tab. Let me know if you need help with something specific within those areas!\n\nIf you're having trouble or need further assistance with returns, refunds, or order tracking, feel free to ask!",
+        "passed": true,
+        "doc_id": "seller_and_product_info_23.txt",
+        "metrics": {
+          "ttft": 16457.786393000788,
+          "itl": 67.90816334285496,
+          "e2e": 23588.14354400056
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "question": "Is there a Daraz app for iPhone?",
         "expected": "Yes, available on the Apple App Store.",
-        "actual": "It seems like there's no product related to a Daraz app for iPhone in our catalog. You might want to check if the app exists in the App Store directly. Is there anything else you need help with from the catalog?",
-        "passed": false,
-        "doc_id": "seller_and_product_info_24.txt"
+        "actual": "I couldn't find information specifically about a Daraz app for iPhone. It might not have one, but you can always check the official Apple App Store. Have you tried looking for it there?",
+        "passed": true,
+        "doc_id": "seller_and_product_info_24.txt",
+        "metrics": {
+          "ttft": 31673.45663499964,
+          "itl": 81.27828663157887,
+          "e2e": 34762.031526999635
+        },
+        "tools_used": [
+          "Product Search",
+          "Knowledge Base"
+        ]
       }
     ],
     "tools": [
       {
         "prompt": "Search for iPhone 15",
         "expected_tool": "product_search",
-        "actual": "I'm sorry, but there are no products matching \"iPhone 15\" in our catalog. Could you please try with a different keyword or the name of a brand like Apple?",
-        "passed": false
+        "actual": "I couldn't find any products matching 'iPhone 15' in our catalog. Maybe try shorter keywords like a brand name, or check if there are any accessories that might be related. If you have any other questions or need help with something else, feel free to ask!",
+        "passed": true,
+        "metrics": {
+          "ttft": 20952.156888999525,
+          "itl": 83.82873539999723,
+          "e2e": 25562.737335999373
+        },
+        "tools_used": [
+          "Product Search",
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "What are the flash deals?",
         "expected_tool": "flash_deals",
-        "actual": "The flash sale is currently active! Here are some deals you might be interested in:\n\n1. Service Men's Casual Wear is on sale for 142,429 PKR, saving you 28%. It ends in 7 minutes!\n2. Orient Men's Casual Wear is available for 120,275 PKR, with a 5% discount. It ends in 39 minutes!\n3. Service Advanced Skin Care Serum is on a fantastic sale of 51,183 PKR, offering a 42% discount. It ends in 11 minutes!\n\nWould you like to know more about these deals or proceed with any of these products?",
-        "passed": false
+        "actual": "Flash sale is currently active! Here are some deals:\n\n1. Bata Advanced Skin Care Serum - Currently 127,313 PKR (Save 6%). Ends in 10 minutes.\n2. Dawlance Men's Athletic Shoes - Currently 144,518 PKR (Save 6%). Ends in 5 minutes.\n3. Service Advanced Skin Care Serum - Currently 51,183 PKR (Save 42%). Ends in 10 minutes.\n\nDon't miss out on these great deals!",
+        "passed": true,
+        "metrics": {
+          "ttft": 56568.77465300022,
+          "itl": 159.22359136842115,
+          "e2e": 74720.26406900023
+        },
+        "tools_used": [
+          "Flash Deals",
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "Shipping cost to Karachi",
         "expected_tool": "shipping",
         "actual": "Shipping to Karachi costs 150 PKR. Your package is estimated to arrive by Tuesday, May 05. Is there anything else you need help with regarding this order?",
-        "passed": false
+        "passed": true,
+        "metrics": {
+          "ttft": 25179.366700999708,
+          "itl": 120.84715899999941,
+          "e2e": 29529.864424999687
+        },
+        "tools_used": [
+          "Shipping",
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "What is 15% of 12000?",
         "expected_tool": "calculator",
-        "actual": "Sure, let's calculate 15% of 12000. To find that, you would multiply 12000 by 0.15. \n\nSo, 15% of 12000 is 1800.",
-        "passed": false
+        "actual": "Sure, I can help with that. 15% of 12000 is 1800.",
+        "passed": true,
+        "metrics": {
+          "ttft": 45494.32701800015,
+          "itl": 78.53526160000911,
+          "e2e": 47457.70855800038
+        },
+        "tools_used": [
+          "Calculator",
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "Compare Redmi Note 13 and Poco X6",
         "expected_tool": "comparison",
-        "actual": "I couldn't find information for Redmi Note 13 and Poco X6 to compare. Maybe I can help you with something else on Daraz?",
-        "passed": false
+        "actual": "I couldn't find detailed information for Redmi Note 13 and Poco X6. Could you please check if the product names are correct or try comparing other products for now?",
+        "passed": true,
+        "metrics": {
+          "ttft": 20887.300498000513,
+          "itl": 63.457376888891304,
+          "e2e": 23171.7660660006
+        },
+        "tools_used": [
+          "Comparison",
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "My name is Raza",
         "expected_tool": "crm",
-        "actual": "Hello Raza, I see you're interested in the Service Advanced Skin Care Serum. It's a high-quality product with a rating of 4.3/5 based on 161 reviews, and currently on sale for 51,183 PKR, which is a 42% saving. It’s available in stock with 371 units. If you need help with your order or have any other questions, just let me know!",
-        "passed": false
+        "actual": "Hello Raza! How can I assist you with your Daraz shopping today? Is there a product you're looking to find or an order you need help with?",
+        "passed": false,
+        "metrics": {
+          "ttft": 19390.56824599993,
+          "itl": 63.74766768749396,
+          "e2e": 21430.493611999736
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "I live in Lahore",
         "expected_tool": "crm",
-        "actual": "Hello! It sounds like your package is currently estimated to arrive by Tuesday, May 05. However, since you now live in Lahore, I should inform you that there might be additional shipping costs. Could you please confirm if you want to proceed with this order, or would you like me to help you find a product in a location closer to Lahore?",
-        "passed": false
+        "actual": "It looks like you're having trouble finding product information for your comparison between the Redmi Note 13 and the Poco X6. Could you please check the product names again? Sometimes minor spelling or typing errors can prevent items from showing up. If you're still having trouble, I can help you track your order or look into other product comparisons.",
+        "passed": false,
+        "metrics": {
+          "ttft": 23472.927631999482,
+          "itl": 62.05357207142827,
+          "e2e": 27816.67767699946
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       },
       {
         "prompt": "Suggest some shoes",
         "expected_tool": "product_search",
-        "actual": "Sure, here are some shoe options from the catalog:\n\n1. **Gul Ahmed Men's Athletic Shoes** - This is a high-quality men's shoe with a base price of 192,825 PKR. It’s currently on a sale for 5,563 PKR (that’s a 32% saving), and it’s in stock with 263 items available.\n\n2. **J. Women's Fashion Heels** - For women, the J. brand offers a stylish heel with a base price of 105,054 PKR. It’s currently on sale for 58,715 PKR (that’s a 24% saving), and there are 283 items in stock.\n\nLet me know if you need more recommendations or have any other questions!",
-        "passed": false
+        "actual": "Sure, Raza! Here are some shoe recommendations from our catalog:\n\n1. **Gul Ahmed Men's Athletic Shoes**: These are high-quality and on a current sale for 5,563 PKR, giving you a 32% discount. They're perfect for everyday wear and look great with any outfit.\n\n2. **Service Women's Fashion Heels**: These heels are highly rated, with a 4.9/5 score. They’re currently on sale at 58,715 PKR, offering you a 24% discount. They look amazing and add a touch of elegance to your footwear.\n\nWould you like to see more options or check out specific brands?",
+        "passed": false,
+        "metrics": {
+          "ttft": 17640.745639999295,
+          "itl": 63.7064801549315,
+          "e2e": 26687.065821999568
+        },
+        "tools_used": [
+          "Knowledge Base"
+        ]
       }
     ]
   }

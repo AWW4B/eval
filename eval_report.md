@@ -1,5 +1,5 @@
 # NLP Assignment 5 - Evaluation Report
-Generated on: Tue May  5 00:31:10 2026
+Generated on: Tue May  5 01:49:20 2026
 
 ## 1. System Configuration
 - **OS**: Linux
@@ -11,17 +11,17 @@ Generated on: Tue May  5 00:31:10 2026
 ## 2. Correctness Metrics
 | Metric | Value | Detail |
 |--------|-------|--------|
-| RAG Precision@1 | 0.00% | 0/31 |
-| Tool Accuracy   | 0.00% | 0/8 |
+| RAG Precision@1 | 54.84% | 17/31 |
+| Tool Accuracy   | 62.50% | 5/8 |
 
 ## 3. Latency (Single Turn, 5 trials each)
 | Scenario | Mean E2E (ms) | 95% CI | Median (ms) | P90 (ms) | Avg TTFT (ms) |
 |----------|---------------|--------|-------------|----------|---------------|
-| simple | 18169.0 | ±2505.0 | 18406.2 | 20807.4 | 15995.1 |
-| rag | 20161.1 | ±2407.6 | 20055.5 | 24164.7 | 15550.9 |
-| tool | 25160.1 | ±2011.2 | 24101.3 | 29229.8 | 23316.5 |
-| mixed | 32420.9 | ±8003.8 | 29518.5 | 47852.2 | 25790.2 |
+| simple | 18516.6 | ±935.4 | 18298.5 | 20368.0 | 16260.2 |
+| rag | 22530.7 | ±3243.6 | 21446.9 | 28594.3 | 18091.0 |
+| tool | 23950.6 | ±1510.6 | 23117.0 | 26439.9 | 21775.3 |
+| mixed | 28278.9 | ±3014.5 | 26708.6 | 33530.5 | 23134.2 |
 
 ## 4. Throughput
 - **Turns/sec**: 0.05
-- **Duration**: 282.8s
+- **Duration**: 304.9s

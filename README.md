@@ -1,27 +1,39 @@
-# Evaluation Suite - NLP Assignment 5
+# Hybrid RAG Agent - Evaluation Suite (Assignment 5)
 
-This folder contains the standalone evaluation suite for the Daraz AI Chatbot. 
-It is designed to be run against the active backend API.
+This repository contains the automated evaluation suite for the Daraz AI Shopping Assistant.
 
-## Setup
-1. Ensure the backend is running (`uvicorn main:app ...` or via Docker).
-2. Install the requirements for the eval suite:
+## 📺 Demo Video
+[Watch the Evaluation Demo (Loom)](https://vimeo.com/placeholder)  
+*(Replace with your recorded video link)*
+
+## 🚀 How to Run
+1. **Start the Chatbot Backend**:
    ```bash
-   pip install aiohttp websockets psutil
+   cd backend/src
+   uvicorn main:app --port 8000
    ```
+2. **Execute Evaluations**:
+   ```bash
+   cd evalsetc
+   pip install -r requirements.txt
+   python run_evals.py
+   ```
+3. **View Results**:
+   The suite will generate `eval_report.md` (raw) and you can find the formal analysis in `report.md`.
 
-## Running Evaluations
-To run the full suite (Correctness + Performance + Throughput) and generate a report:
-```bash
-python run_evals.py
-```
+## 📊 Metrics Definitions
+- **TTFT (Time to First Token)**: Measured from the moment the JSON is sent over WebSocket until the first token message is received.
+- **RAG Precision**: Calculated as the percentage of queries where the retrieved context contains keywords from the annotated ground truth.
+- **Faithfulness**: A heuristic check verifying that the LLM response contains specific factual markers from the retrieved document.
+- **95% Confidence Interval**: Calculated using the standard deviation of 30 trials: `1.96 * (std_dev / sqrt(n))`.
 
-## Contents
-- `data.py`: Contains the 30+ RAG QA pairs (with Document IDs), 10 multi-turn dialogues, and tool test cases.
-- `run_evals.py`: The main automation script. It measures TTFT, E2E latency, and accuracy metrics.
-- `eval_report.md`: (Generated after running) The final Markdown report for submission.
+## 📂 Folder Structure
+- `/data.py`: Annotated ground truth for 30+ RAG queries and 10+ dialogues.
+- `/run_evals.py`: The single-command test harness.
+- `/report.md`: Formal analysis and performance curves.
 
-## Metrics
-- **RAG Precision**: Calculated by comparing LLM responses to annotated ground truth answers using keyword heuristics.
-- **Latency**: Measured over WebSocket to capture accurate **Time to First Token (TTFT)**.
-- **Throughput**: Calculated by simulating concurrent users and measuring turns per second.
+## 🛠 Dependencies
+- `aiohttp`: Async HTTP requests.
+- `websockets`: Real-time token latency measurement.
+- `psutil`: Hardware configuration detection.
+- `numpy`: Statistical calculations.

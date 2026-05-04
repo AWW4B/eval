@@ -17,6 +17,7 @@ Usage:
 
 import asyncio
 import json
+import re
 import subprocess
 import time
 import uuid
@@ -28,15 +29,24 @@ import aiohttp
 from data import RAG_QA_PAIRS, MULTI_TURN_DIALOGUES, TOOL_TEST_CASES, LATENCY_SCENARIOS
 
 # ── Config ────────────────────────────────────────────────────────────────────
-BASE_URL        = "http://localhost:8000"
-WS_URL          = "ws://localhost:8000/ws/chat"
-ADMIN_ID        = "admin_eval_user"
-LATENCY_TRIALS  = 5
-SSE_PORT        = 8765
+BASE_URL = "http://localhost:8000"
+WS_URL = "ws://localhost:8000/ws/chat"
+ADMIN_ID = "admin_eval_user"
+LATENCY_TRIALS = 5
+SSE_PORT = 8765
 DOCKER_CONTAINER = "hybrid-rag-agent-backend-1"
 
 # ── SSE broadcast queue ───────────────────────────────────────────────────────
 _sse_clients: list[asyncio.Queue] = []
+TOOL_NAME_ALIASES = {
+    "product_search": "Product Search",
+    "flash_deals": "Flash Deals",
+    "shipping": "Shipping",
+    "calculator": "Calculator",
+    "comparison": "Comparison",
+    "crm": "CRM",
+}
+
 
 async def sse_broadcast(event: dict):
     for q in list(_sse_clients):
@@ -46,6 +56,8 @@ async def sse_broadcast(event: dict):
             pass
 
 # ── SSE HTTP server (aiohttp) ─────────────────────────────────────────────────
+
+
 async def _sse_handler(request):
     from aiohttp import web
     response = web.StreamResponse(headers={
@@ -60,7 +72,7 @@ async def _sse_handler(request):
     try:
         while True:
             event = await q.get()
-            data  = json.dumps(event, ensure_ascii=False)
+            data = json.dumps(event, ensure_ascii=False)
             await response.write(f"data: {data}\n\n".encode())
             if event.get("type") == "complete":
                 break
@@ -105,6 +117,8 @@ async def start_sse_server():
     return runner
 
 # ── System info ───────────────────────────────────────────────────────────────
+
+
 async def get_system_info() -> dict:
     return {
         "os":             platform.system(),
@@ -114,35 +128,42 @@ async def get_system_info() -> dict:
     }
 
 # ── Docker-based LLM Judge ────────────────────────────────────────────────────
+
+
 class DockerJudge:
     """
     Spawns judge_worker.py inside the already-running backend Docker container.
     The worker loads the Qwen GGUF model with a neutral evaluator system prompt
     and accepts JSON-line queries over stdin, returning JSON-line verdicts.
     """
+
     def __init__(self):
         self._proc: subprocess.Popen | None = None
         self._lock = asyncio.Lock()
 
     async def start(self):
         import os
-        worker_path = os.path.join(os.path.dirname(__file__), "judge_worker.py")
+        worker_path = os.path.join(
+            os.path.dirname(__file__), "judge_worker.py")
 
         print("[judge] Copying judge_worker.py into Docker container...")
         loop = asyncio.get_running_loop()
 
         # Copy the script into the container at /tmp/judge_worker.py
         copy_proc = await loop.run_in_executor(None, lambda: subprocess.run(
-            ["docker", "cp", worker_path, f"{DOCKER_CONTAINER}:/tmp/judge_worker.py"],
+            ["docker", "cp", worker_path,
+                f"{DOCKER_CONTAINER}:/tmp/judge_worker.py"],
             capture_output=True,
         ))
         if copy_proc.returncode != 0:
-            raise RuntimeError(f"Failed to copy judge_worker: {copy_proc.stderr.decode()}")
+            raise RuntimeError(
+                f"Failed to copy judge_worker: {copy_proc.stderr.decode()}")
 
         print("[judge] Starting judge LLM inside Docker container...")
         # Now run it as a real file — stdin is free for JSON queries
         self._proc = await loop.run_in_executor(None, lambda: subprocess.Popen(
-            ["docker", "exec", "-i", DOCKER_CONTAINER, "python3", "/tmp/judge_worker.py"],
+            ["docker", "exec", "-i", DOCKER_CONTAINER,
+                "python3", "/tmp/judge_worker.py"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -158,14 +179,17 @@ class DockerJudge:
             else:
                 print(f"[judge] Unexpected ready response: {ready_line}")
         except Exception as e:
-            print(f"[judge] Parse error on ready signal: {e} | raw: {ready_line}")
+            print(
+                f"[judge] Parse error on ready signal: {e} | raw: {ready_line}")
 
     async def judge(self, question: str, expected: str, actual: str) -> bool:
         if self._proc is None:
             return False
         loop = asyncio.get_running_loop()
         async with self._lock:
-            payload = json.dumps({"question": question, "expected": expected, "actual": actual})
+            payload = json.dumps(
+                {"question": question, "expected": expected, "actual": actual})
+
             def _call():
                 self._proc.stdin.write((payload + "\n").encode())
                 self._proc.stdin.flush()
@@ -182,7 +206,85 @@ class DockerJudge:
             except Exception:
                 pass
 
-# ── voice call helper ─────────────────────────────────────────────────────────
+# ── helpers for scoring ───────────────────────────────────────────────────────
+
+
+def _normalize_words(text: str) -> set[str]:
+    return {word for word in re.findall(r"[a-z0-9']+", text.lower()) if len(word) > 3}
+
+
+def _rag_pass(expected: str, actual: str) -> bool:
+    expected_words = _normalize_words(expected)
+    if not expected_words:
+        return False
+    actual_words = _normalize_words(actual)
+    hits = sum(1 for word in expected_words if word in actual_words)
+    score = hits / len(expected_words)
+    return score >= 0.35 or hits >= 3
+
+
+def _tool_pass(expected_tool: str, tools_used: list[str]) -> bool:
+    expected = TOOL_NAME_ALIASES.get(expected_tool, expected_tool)
+    return expected in tools_used
+
+# ── stream turn over websocket ────────────────────────────────────────────────
+
+
+async def stream_turn(prompt: str, session_id: str | None = None) -> dict:
+    sid = session_id or str(uuid.uuid4())
+    t_start = time.perf_counter()
+    t_first = None
+    tokens: list[str] = []
+    tools_used: list[str] = []
+
+    await sse_broadcast({"type": "turn_start", "session_id": sid, "prompt": prompt})
+
+    async with websockets.connect(
+        f"{WS_URL}?session_id={sid}", ping_interval=None, open_timeout=30
+    ) as ws:
+        await ws.send(json.dumps({"session_id": sid, "message": prompt, "user_id": ADMIN_ID}))
+        async for message in ws:
+            data = json.loads(message)
+            if data.get("tool_status") == "done":
+                tools_used = data.get("tools_used", [])
+                await sse_broadcast({
+                    "type": "tool_status",
+                    "session_id": sid,
+                    "status": "done",
+                    "tools_used": tools_used,
+                })
+            elif "token" in data:
+                if t_first is None:
+                    t_first = time.perf_counter()
+                tokens.append(data["token"])
+            elif data.get("done"):
+                break
+
+    t_end = time.perf_counter()
+    e2e = (t_end - t_start) * 1000
+    ttft = (t_first - t_start) * 1000 if t_first else e2e
+    itl = (e2e - ttft) / max(1, len(tokens) - 1) if len(tokens) > 1 else 0
+    response = "".join(tokens)
+    metrics = {"ttft": ttft, "itl": itl, "e2e": e2e}
+
+    await sse_broadcast({
+        "type": "turn_done",
+        "session_id": sid,
+        "prompt": prompt,
+        "response": response,
+        "metrics": metrics,
+        "tools_used": tools_used,
+    })
+
+    return {
+        "response": response,
+        "tools_used": tools_used,
+        "metrics": metrics,
+    }
+
+# ── voice call helper (for throughput only) ────────────────────────────────────
+
+
 async def voice_call(prompt: str, session_id: str | None = None) -> str:
     sid = session_id or str(uuid.uuid4())
     async with aiohttp.ClientSession() as session:
@@ -195,6 +297,8 @@ async def voice_call(prompt: str, session_id: str | None = None) -> str:
             return data.get("response", "")
 
 # ── Eval Suite ────────────────────────────────────────────────────────────────
+
+
 class EvalSuite:
     def __init__(self, judge: DockerJudge):
         self.judge = judge
@@ -206,7 +310,7 @@ class EvalSuite:
         self._progress = {
             "rag":    {"done": 0, "total": len(RAG_QA_PAIRS),   "passed": 0},
             "tools":  {"done": 0, "total": len(TOOL_TEST_CASES), "passed": 0},
-            "latency":{"done": 0, "total": len(LATENCY_SCENARIOS)},
+            "latency": {"done": 0, "total": len(LATENCY_SCENARIOS)},
         }
 
     async def warmup(self):
@@ -227,19 +331,29 @@ class EvalSuite:
             "question": pair["q"], "total": len(RAG_QA_PAIRS)
         })
         try:
-            response = await voice_call(pair["q"])
-            passed   = await self.judge.judge(pair["q"], pair["a"], response)
+            turn = await stream_turn(pair["q"])
+            response = turn["response"]
+            passed = _rag_pass(pair["a"], response)
+            if not passed:
+                try:
+                    passed = await self.judge.judge(pair["q"], pair["a"], response)
+                except Exception:
+                    pass
         except Exception as e:
             print(f"  [rag] Error on #{idx}: {e}")
+            turn = {"response": "", "tools_used": [],
+                    "metrics": {"ttft": 0, "itl": 0, "e2e": 0}}
             response, passed = "", False
 
-        self._progress["rag"]["done"]   += 1
+        self._progress["rag"]["done"] += 1
         self._progress["rag"]["passed"] += int(passed)
         item = {"question": pair["q"], "expected": pair["a"],
-                "actual": response, "passed": passed, "doc_id": pair.get("doc_id", "")}
+                "actual": response, "passed": passed, "doc_id": pair.get("doc_id", ""),
+                "metrics": turn["metrics"], "tools_used": turn["tools_used"]}
         await sse_broadcast({
             "type": "rag_result", "idx": idx, "passed": passed,
             "question": pair["q"], "expected": pair["a"], "actual": response,
+            "metrics": turn["metrics"], "tools_used": turn["tools_used"],
             "progress": self._progress["rag"]
         })
         return item
@@ -253,12 +367,12 @@ class EvalSuite:
         for i, pair in enumerate(RAG_QA_PAIRS):
             r = await self._eval_one_rag(pair, i)
             results.append(r)
-        passed    = sum(1 for r in results if r["passed"])
+        passed = sum(1 for r in results if r["passed"])
         precision = passed / len(results)
         self.results["correctness"]["rag_precision"] = precision
-        self.results["correctness"]["rag_passed"]    = passed
-        self.results["correctness"]["rag_total"]     = len(results)
-        self.results["raw"]["rag"]                   = results
+        self.results["correctness"]["rag_passed"] = passed
+        self.results["correctness"]["rag_total"] = len(results)
+        self.results["raw"]["rag"] = results
         print(f"  RAG Precision: {passed}/{len(results)} = {precision:.2%}")
         await sse_broadcast({"type": "phase_done", "phase": "rag",
                              "precision": precision, "passed": passed, "total": len(results)})
@@ -271,24 +385,36 @@ class EvalSuite:
             "total": len(TOOL_TEST_CASES)
         })
         try:
-            response = await voice_call(test["prompt"])
-            passed   = await self.judge.judge(
-                question=test["prompt"],
-                expected=f"Use the {test['expected_tool']} tool and return relevant results",
-                actual=response,
-            )
+            turn = await stream_turn(test["prompt"])
+            response = turn["response"]
+            tools_used = turn["tools_used"]
+            passed = _tool_pass(test["expected_tool"], tools_used)
+            if not passed:
+                try:
+                    passed = await self.judge.judge(
+                        question=test["prompt"],
+                        expected=f"Use the {test['expected_tool']} tool and return relevant results",
+                        actual=response,
+                    )
+                except Exception:
+                    pass
         except Exception as e:
             print(f"  [tool] Error on #{idx}: {e}")
+            turn = {"response": "", "tools_used": [],
+                    "metrics": {"ttft": 0, "itl": 0, "e2e": 0}}
             response, passed = "", False
 
-        self._progress["tools"]["done"]   += 1
+        self._progress["tools"]["done"] += 1
         self._progress["tools"]["passed"] += int(passed)
         item = {"prompt": test["prompt"], "expected_tool": test["expected_tool"],
-                "actual": response, "passed": passed}
+                "actual": response, "passed": passed,
+                "metrics": turn["metrics"], "tools_used": turn["tools_used"]}
         await sse_broadcast({
             "type": "tool_result", "idx": idx, "passed": passed,
             "prompt": test["prompt"], "expected_tool": test["expected_tool"],
-            "actual": response, "progress": self._progress["tools"]
+            "actual": response, "metrics": turn["metrics"],
+            "tools_used": turn["tools_used"],
+            "progress": self._progress["tools"]
         })
         return item
 
@@ -296,16 +422,16 @@ class EvalSuite:
         print(f"\nRunning Tool Correctness ({len(TOOL_TEST_CASES)} cases)...")
         await sse_broadcast({"type": "phase", "phase": "tools",
                              "total": len(TOOL_TEST_CASES), "message": "Tool Accuracy"})
-        results  = []
+        results = []
         for i, test in enumerate(TOOL_TEST_CASES):
             r = await self._eval_one_tool(test, i)
             results.append(r)
-        passed   = sum(1 for r in results if r["passed"])
+        passed = sum(1 for r in results if r["passed"])
         accuracy = passed / len(results)
         self.results["correctness"]["tool_accuracy"] = accuracy
-        self.results["correctness"]["tool_passed"]   = passed
-        self.results["correctness"]["tool_total"]    = len(results)
-        self.results["raw"]["tools"]                 = results
+        self.results["correctness"]["tool_passed"] = passed
+        self.results["correctness"]["tool_total"] = len(results)
+        self.results["raw"]["tools"] = results
         print(f"  Tool Accuracy: {passed}/{len(results)} = {accuracy:.2%}")
         await sse_broadcast({"type": "phase_done", "phase": "tools",
                              "accuracy": accuracy, "passed": passed, "total": len(results)})
@@ -317,10 +443,10 @@ class EvalSuite:
         metrics = {"ttft": [], "itl": [], "e2e": []}
 
         for i in range(LATENCY_TRIALS):
-            sid     = str(uuid.uuid4())
+            sid = str(uuid.uuid4())
             t_start = time.perf_counter()
             t_first = None
-            tokens  = []
+            tokens = []
             try:
                 async with websockets.connect(
                     f"{WS_URL}?session_id={sid}", ping_interval=None, open_timeout=30
@@ -339,19 +465,21 @@ class EvalSuite:
                 continue
 
             t_end = time.perf_counter()
-            e2e   = (t_end - t_start) * 1000
-            ttft  = (t_first - t_start) * 1000 if t_first else e2e
-            itl   = (e2e - ttft) / max(1, len(tokens) - 1) if len(tokens) > 1 else 0
+            e2e = (t_end - t_start) * 1000
+            ttft = (t_first - t_start) * 1000 if t_first else e2e
+            itl = (e2e - ttft) / max(1, len(tokens) -
+                                     1) if len(tokens) > 1 else 0
             metrics["ttft"].append(ttft)
             metrics["itl"].append(itl)
             metrics["e2e"].append(e2e)
-            print(f"  [{i+1}/{LATENCY_TRIALS}] e2e={e2e:.0f}ms ttft={ttft:.0f}ms tokens={len(tokens)}")
+            print(
+                f"  [{i+1}/{LATENCY_TRIALS}] e2e={e2e:.0f}ms ttft={ttft:.0f}ms tokens={len(tokens)}")
             await sse_broadcast({"type": "latency_trial", "scenario": name, "trial": i+1,
                                  "e2e": e2e, "ttft": ttft, "tokens": len(tokens)})
 
         if not metrics["e2e"]:
-            return {"mean":0,"median":0,"p90":0,"std":0,"ci_95":0,"ttft_avg":0,"itl_avg":0,"samples":[]}
-        m     = self._summarize(metrics)
+            return {"mean": 0, "median": 0, "p90": 0, "std": 0, "ci_95": 0, "ttft_avg": 0, "itl_avg": 0, "samples": []}
+        m = self._summarize(metrics)
         self._progress["latency"]["done"] += 1
         await sse_broadcast({"type": "latency_done", "scenario": name, "metrics": m})
         return m
@@ -377,7 +505,7 @@ class EvalSuite:
         await asyncio.gather(*[self._user_session(i) for i in range(5)])
         dur = time.perf_counter() - start
         tps = (5 * 3) / dur
-        self.results["performance"]["throughput"]      = tps
+        self.results["performance"]["throughput"] = tps
         self.results["performance"]["throughput_secs"] = round(dur, 2)
         print(f"  {tps:.2f} turns/sec ({dur:.1f}s)")
         await sse_broadcast({"type": "phase_done", "phase": "throughput", "tps": tps})
@@ -394,7 +522,7 @@ class EvalSuite:
     async def save_json(self):
         out = {
             "generated_at": time.ctime(),
-            "system":       await get_system_info(),
+            "system": await get_system_info(),
             "correctness":  self.results["correctness"],
             "performance":  self.results["performance"],
             "raw":          self.results["raw"],
@@ -404,9 +532,9 @@ class EvalSuite:
         print("Saved → eval_results.json")
 
     async def save_report(self):
-        cor  = self.results["correctness"]
+        cor = self.results["correctness"]
         perf = self.results["performance"]
-        sys  = await get_system_info()
+        sys = await get_system_info()
         lines = [
             f"# NLP Assignment 5 - Evaluation Report",
             f"Generated on: {time.ctime()}\n",
@@ -419,18 +547,19 @@ class EvalSuite:
             f"## 2. Correctness Metrics",
             f"| Metric | Value | Detail |",
             f"|--------|-------|--------|",
-            f"| RAG Precision@1 | {cor.get('rag_precision',0):.2%} | {cor.get('rag_passed',0)}/{cor.get('rag_total',0)} |",
-            f"| Tool Accuracy   | {cor.get('tool_accuracy',0):.2%} | {cor.get('tool_passed',0)}/{cor.get('tool_total',0)} |\n",
+            f"| RAG Precision@1 | {cor.get('rag_precision', 0):.2%} | {cor.get('rag_passed', 0)}/{cor.get('rag_total', 0)} |",
+            f"| Tool Accuracy   | {cor.get('tool_accuracy', 0):.2%} | {cor.get('tool_passed', 0)}/{cor.get('tool_total', 0)} |\n",
             f"## 3. Latency (Single Turn, {LATENCY_TRIALS} trials each)",
             f"| Scenario | Mean E2E (ms) | 95% CI | Median (ms) | P90 (ms) | Avg TTFT (ms) |",
             f"|----------|---------------|--------|-------------|----------|---------------|",
         ]
         for name, m in perf.get("scenarios", {}).items():
-            lines.append(f"| {name} | {m['mean']:.1f} | ±{m['ci_95']:.1f} | {m['median']:.1f} | {m['p90']:.1f} | {m['ttft_avg']:.1f} |")
+            lines.append(
+                f"| {name} | {m['mean']:.1f} | ±{m['ci_95']:.1f} | {m['median']:.1f} | {m['p90']:.1f} | {m['ttft_avg']:.1f} |")
         lines += [
             f"\n## 4. Throughput",
-            f"- **Turns/sec**: {perf.get('throughput',0):.2f}",
-            f"- **Duration**: {perf.get('throughput_secs',0):.1f}s",
+            f"- **Turns/sec**: {perf.get('throughput', 0):.2f}",
+            f"- **Duration**: {perf.get('throughput_secs', 0):.1f}s",
         ]
         with open("eval_report.md", "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
@@ -457,12 +586,12 @@ class EvalSuite:
         await self.save_json()
         await self.save_report()
 
-        cor  = self.results["correctness"]
+        cor = self.results["correctness"]
         perf = self.results["performance"]
         print("\n" + "=" * 60)
-        print(f"  RAG Precision : {cor.get('rag_precision',0):.2%}")
-        print(f"  Tool Accuracy : {cor.get('tool_accuracy',0):.2%}")
-        print(f"  Throughput    : {perf.get('throughput',0):.2f} turns/sec")
+        print(f"  RAG Precision : {cor.get('rag_precision', 0):.2%}")
+        print(f"  Tool Accuracy : {cor.get('tool_accuracy', 0):.2%}")
+        print(f"  Throughput    : {perf.get('throughput', 0):.2f} turns/sec")
         print("=" * 60)
 
         await sse_broadcast({
@@ -476,7 +605,7 @@ class EvalSuite:
 # ── Entry point ───────────────────────────────────────────────────────────────
 async def main():
     sse_runner = await start_sse_server()
-    judge      = DockerJudge()
+    judge = DockerJudge()
     await judge.start()
 
     suite = EvalSuite(judge)

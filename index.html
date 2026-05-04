@@ -258,6 +258,23 @@ const handlers = {
     log(`Eval started — ${e.rag_total} RAG + ${e.tool_total} tool cases`, 'info');
   },
 
+  turn_start(e) {
+    log(`Prompt: ${e.prompt.slice(0, 90)}`, 'info');
+  },
+
+  tool_status(e) {
+    if (e.status === 'running') {
+      log('Tool search running...', 'info');
+    } else if (e.status === 'done') {
+      const tools = (e.tools_used || []).join(', ') || 'Knowledge Base';
+      log(`Tools used: ${tools}`, 'pass');
+    }
+  },
+
+  turn_done(e) {
+    log(`Output ready: ${(e.response || '').slice(0, 90)}`, 'info');
+  },
+
   status(e) { log(e.message, 'info'); },
 
   phase(e) { log(`▶ Phase: ${e.message}`, 'info'); },

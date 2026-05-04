@@ -8,10 +8,15 @@ Protocol (stdin/stdout, newline-delimited JSON):
   IN  -> {"question": "...", "expected": "...", "actual": "..."}
   OUT <- {"passed": true, "verdict": "YES"}
 """
-import sys, json
+import os
+import sys
+import json
 from llama_cpp import Llama
 
-MODEL_PATH = "/models/qwen2.5-3b-instruct-q4_k_m.gguf"
+MODEL_PATH = os.getenv(
+    "JUDGE_MODEL_PATH",
+    os.getenv("MODEL_PATH", "/models/qwen2.5-3b-instruct-q4_k_m.gguf"),
+)
 
 JUDGE_SYSTEM = (
     "You are a strict automated evaluator. "
@@ -45,7 +50,7 @@ for line in sys.stdin:
         req = json.loads(line)
         question = req["question"]
         expected = req["expected"]
-        actual   = req["actual"]
+        actual = req["actual"]
 
         prompt = (
             f"Question: {question}\n"
@@ -63,10 +68,12 @@ for line in sys.stdin:
             temperature=0.0,
         )
         verdict = result["choices"][0]["message"]["content"].strip().upper()
-        passed  = verdict.startswith("YES")
+        passed = verdict.startswith("YES")
 
-        sys.stdout.write(json.dumps({"passed": passed, "verdict": verdict}) + "\n")
+        sys.stdout.write(json.dumps(
+            {"passed": passed, "verdict": verdict}) + "\n")
         sys.stdout.flush()
     except Exception as e:
-        sys.stdout.write(json.dumps({"passed": False, "verdict": "ERROR", "error": str(e)}) + "\n")
+        sys.stdout.write(json.dumps(
+            {"passed": False, "verdict": "ERROR", "error": str(e)}) + "\n")
         sys.stdout.flush()
